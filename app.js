@@ -290,8 +290,56 @@ function mapSvg({highlight=null, compact=false}={}){
     <polyline class="map-route" points="${poly}"/>
     <polyline class="map-centerline" points="${ccp}"/>
     <polyline class="map-geodesic" points="${gcp}"/>
-    ${islands.map((d,i)=>{const [x,y]=routePts[i]; const isH=highlight===d.slug; const isEnd=d.slug==='monito'||d.slug==='dominica'; return `<g><a href="/isla/${d.slug}" data-link aria-label="${esc(d.name)}"><circle class="map-point" cx="${x}" cy="${y}" r="${isH?8:isEnd?5.6:3.4}" fill="${isH?'#c96f49':isEnd?'#c96f49':'#26515c'}" stroke="#f4eee2" stroke-width="${isH?3:1.5}" opacity="${highlight && !isH ? .46 : 1}"/></a>${labels.has(d.name)?`<text class="map-label" x="${x+7}" y="${y-7}">${esc(d.name)}</text>`:''}</g>`}).join('')}
+    ${islands.map((d,i)=>{const [x,y]=routePts[i]; const isH=highlight===d.slug; const isEnd=d.slug==='monito'||d.slug==='dominica'; return `<g class="map-island-node"><a class="map-island-link" href="/isla/${d.slug}" data-link aria-label="Abrir ficha de ${esc(d.name)}"><title>Abrir ficha: ${esc(d.name)}</title><circle class="map-hit" cx="${x}" cy="${y}" r="13"/><circle class="map-point" cx="${x}" cy="${y}" r="${isH?8:isEnd?5.6:4.4}" fill="${isH?'#c96f49':isEnd?'#c96f49':'#26515c'}" stroke="#f4eee2" stroke-width="${isH?3:1.5}" opacity="${highlight && !isH ? .46 : 1}"/>${labels.has(d.name)?`<text class="map-label map-link-label" x="${x+8}" y="${y-8}">${esc(d.name)}</text>`:''}</a></g>`;}).join('')}
+    <text class="map-interactive-hint" x="684" y="372" text-anchor="end">22 marcadores · haz clic para abrir cada ficha</text>
     <g class="map-legend" transform="translate(42 390)"><rect class="map-legend-bg" width="274" height="76" rx="14"/><line class="legend-geodesic" x1="14" y1="18" x2="52" y2="18"/><text x="62" y="21" class="map-label">Geodésica Monito–Dominica</text><line class="legend-centerline" x1="14" y1="38" x2="52" y2="38"/><text x="62" y="41" class="map-label">Eje central · regresión esférica</text><line class="legend-route" x1="14" y1="58" x2="52" y2="58"/><text x="62" y="61" class="map-label">Secuencia de unidades</text></g>
+  </svg>`;
+}
+
+function nearestIslandRows(d,count=5){
+  return islands
+    .filter(x=>x.slug!==d.slug)
+    .map(x=>({d:x,km:haversineKm(d,x)}))
+    .sort((a,b)=>a.km-b.km)
+    .slice(0,count);
+}
+
+function localMapProjector(d,neighbors,W=720,H=500,pad=46){
+  const pts=[d,...neighbors.map(x=>x.d)];
+  let halfLat=Math.max(.62,...pts.map(x=>Math.abs(x.lat-d.lat)*1.28));
+  let halfLon=Math.max(.88,...pts.map(x=>Math.abs(x.lon-d.lon)*1.28));
+  const areaBoost=Math.min(1.25,Math.sqrt(Math.max(d.area,.05))/48);
+  halfLat=Math.min(1.85,Math.max(halfLat,.58+areaBoost*.38));
+  halfLon=Math.min(2.55,Math.max(halfLon,.82+areaBoost*.92));
+  const midLat=d.lat, cos=Math.cos(degToRad(midLat));
+  const usableW=W-2*pad, usableH=H-2*pad;
+  const scale=Math.min(usableW/(2*halfLon*cos), usableH/(2*halfLat));
+  const proj=(lat,lon)=>[W/2+(lon-d.lon)*cos*scale,H/2-(lat-d.lat)*scale];
+  return {proj,halfLat,halfLon};
+}
+
+function localMapSvg(d){
+  const W=720,H=500;
+  const neighbors=nearestIslandRows(d,5);
+  const {proj}=localMapProjector(d,neighbors,W,H);
+  const coast=coastlineSvg(W,H,(lat,lon)=>proj(lat,lon));
+  const visible=[{d,km:0},...neighbors];
+  const focal=proj(d.lat,d.lon);
+  const labelWidth=Math.min(280,Math.max(110,d.name.length*8.2+28));
+  const labelX=Math.max(12,Math.min(W-labelWidth-12,focal[0]+16));
+  const labelY=Math.max(44,Math.min(H-58,focal[1]-26));
+  return `<svg class="map-svg local-map-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Mapa local de ${esc(d.name)} y sus islas vecinas">
+    <rect class="map-ocean" width="${W}" height="${H}"/>
+    ${coast}
+    ${visible.map(({d:x,km})=>{
+      const [px,py]=proj(x.lat,x.lon);
+      const focalNode=x.slug===d.slug;
+      const name=focalNode?x.name:(x.name.length>22?x.name.replace('Saint-Martin / Sint Maarten','St. Martin'):x.name);
+      return `<g class="${focalNode?'local-focal-node':'local-neighbor-node'}"><a class="map-island-link" href="/isla/${x.slug}" data-link aria-label="${focalNode?'Ficha actual':'Abrir ficha de '+esc(x.name)}"><title>${focalNode?esc(x.name):`${esc(x.name)} · ${fmt(km/1.609344,1)} mi`}</title><circle class="map-hit" cx="${px}" cy="${py}" r="${focalNode?18:13}"/><circle class="map-point" cx="${px}" cy="${py}" r="${focalNode?8:4.5}"/></a>${focalNode?'':`<text class="map-neighbor-label" x="${px+8}" y="${py-7}">${esc(name)}</text>`}</g>`;
+    }).join('')}
+    <g class="local-focal-label" transform="translate(${labelX},${labelY})"><rect width="${labelWidth}" height="38" rx="12"/><text x="14" y="25">${esc(d.name)}</text></g>
+    <g class="local-map-caption" transform="translate(18 18)"><rect width="176" height="30" rx="10"/><text x="12" y="20">ZOOM LOCAL · VECINOS PRÓXIMOS</text></g>
+    <text class="local-map-note" x="${W-18}" y="${H-18}" text-anchor="end">Siluetas modernas · marcadores enlazan a sus fichas</text>
   </svg>`;
 }
 
