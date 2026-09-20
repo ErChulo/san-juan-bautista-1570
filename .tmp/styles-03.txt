@@ -1,0 +1,8 @@
+6px; }
+  .footer-inner { padding: 34px 18px; flex-direction: column; align-items: flex-start; }
+  .map-card, .map-svg, .island-map-panel, .island-map-panel svg { min-height: 390px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
