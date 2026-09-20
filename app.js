@@ -31,7 +31,9 @@ const sources = [
   { type:"Síntesis histórica", title:"Catholic Encyclopedia — Puerto Rico", url:"https://www.newadvent.org/cathen/12291b.htm", text:"Resume que en 1519 el territorio diocesano se amplió para incluir las islas de Barlovento de las Antillas Menores desde Santa Cruz hasta Dominica." },
   { type:"Cartografía moderna", title:"USGS — Geologic map of St. Thomas, U.S. Virgin Islands", url:"https://pubs.usgs.gov/of/1985/0297/report.pdf", text:"El mapa federal identifica Little St. James entre las islas menores del entorno de St. Thomas; se usa sólo para justificar su pertenencia geográfica al grupo moderno de las Islas Vírgenes." },
   { type:"Registro judicial moderno", title:"U.S. Department of Justice — Matter of the Estate of Jeffrey E. Epstein", url:"https://www.justice.gov/epstein/doj-disclosures/court-records-matter-estate-jeffrey-e-epstein-deceased-no-st-21-rv-00005-vi-super-ct-2021", text:"El DOJ publica los expedientes del litigio de las Islas Vírgenes que documentan la relación de Epstein con Little St. James. Se usa sólo para explicar el dato moderno, no como evidencia histórica del siglo XVI." },
-  { type:"Cartografía vectorial", title:"Click That 'Hood — Caribbean Islands GeoJSON", url:"https://github.com/codeforgermany/click_that_hood/blob/main/public/data/caribbean-islands.geojson", text:"Se usa un subconjunto local del GeoJSON caribeño para dibujar siluetas costeras modernas reconocibles. El paquete upstream se distribuye bajo licencia MIT; no se usa como prueba histórica de jurisdicción." }
+  { type:"Cartografía vectorial", title:"Click That 'Hood — Caribbean Islands GeoJSON", url:"https://github.com/codeforgermany/click_that_hood/blob/main/public/data/caribbean-islands.geojson", text:"Se usa un subconjunto local del GeoJSON caribeño para dibujar siluetas costeras modernas reconocibles. El paquete upstream se distribuye bajo licencia MIT; no se usa como prueba histórica de jurisdicción." },
+  { type:"Historia militar", title:"Boletín de la Academia Puertorriqueña de la Historia — operaciones de 1646–1647", url:"https://academiaprhistoria.org/wp-content/uploads/2019/11/1976-01-01.pdf", text:"Documenta una expedición procedente de Puerto Rico a Tórtola en 1646 y operaciones en Santa Cruz y Vieques en 1647." },
+  { type:"Síntesis histórica", title:"Prontuario histórico de Puerto Rico — base de operaciones punitivas", url:"https://www.larramendi.es/es/catalogo_imagenes/grupo.do?path=1031923", text:"Describe a Puerto Rico como base de operaciones contra piratas y corsarios en las islas de Barlovento, mencionando Vieques, Santa Cruz, San Martín, San Cristóbal y Tórtola." }
 ];
 
 const SITE_BASE = window.__SITE_BASE__ || '/';
@@ -45,6 +47,50 @@ const researchDownloads = [
   { kind:"Mapa histórico", title:"Map of the islands of Hispaniola and Puerto Rico", date:"ca. 1639", institution:"Library of Congress", href:"https://www.loc.gov/item/2003623402/", action:"Abrir y descargar" },
   { kind:"Carta histórica", title:"A chart of the Antilles … with the Virgin Isles", date:"1784", institution:"Library of Congress", href:"https://www.loc.gov/item/74695636/", action:"Abrir y descargar" }
 ];
+
+const rescueStories = {
+  "vieques": {
+    "label": "Rescates y desalojos desde Puerto Rico",
+    "date": "1647 · 1718",
+    "title": "Vieques fue atendida militarmente desde Puerto Rico",
+    "text": "En 1647 una expedición salida de Puerto Rico actuó contra el establecimiento inglés asociado a John Pinard; otras fuentes registran también la expulsión de franceses. En 1718 una nueva expedición de tropas, milicias y corsarios procedentes de Puerto Rico volvió a desalojar un asentamiento inglés. Es uno de los casos mejor documentados del patrón que el video resume como «rescates».",
+    "sourceTitle": "Historia geográfica, civil y natural de Puerto Rico · Library of Congress",
+    "sourceUrl": "https://tile.loc.gov/storage-services/service/gdc/lhbpr/06061/06061.pdf"
+  },
+  "santa-cruz": {
+    "label": "Expedición desde Puerto Rico",
+    "date": "1647",
+    "title": "Santa Cruz aparece en las operaciones de 1647",
+    "text": "Una expedición desde Puerto Rico desalojó un establecimiento extranjero en Santa Cruz en 1647. La documentación no es perfectamente uniforme sobre la nacionalidad del grupo expulsado: la ficha archivística del mapa de 1647 habla de ingleses, mientras síntesis puertorriqueñas posteriores lo describen como francés. El sitio conserva el hecho de la expedición y señala la discrepancia.",
+    "sourceTitle": "Mapa de la Isla de Santa Cruz · registro archivístico de 1647",
+    "sourceUrl": "https://greatercaribbeanmaps.org/maps/mapa-de-la-isla-de-santa-cruz-islas-virgenes-de-los-estados-unidos-de-america-2/"
+  },
+  "islas-virgenes": {
+    "label": "Rescate de Tórtola",
+    "date": "1646",
+    "title": "Tórtola fue atacada desde Puerto Rico",
+    "text": "Fuentes puertorriqueñas registran que en 1646 una expedición procedente de Puerto Rico expulsó a los holandeses de Tórtola. Como Tórtola está comprendida aquí dentro de la unidad narrativa «Islas Vírgenes», el episodio se presenta en esta ficha sin convertir Tórtola en una unidad adicional del conteo de 22.",
+    "sourceTitle": "Boletín de la Academia Puertorriqueña de la Historia · 1976",
+    "sourceUrl": "https://academiaprhistoria.org/wp-content/uploads/2019/11/1976-01-01.pdf"
+  },
+  "saint-martin-sint-maarten": {
+    "label": "Defensa atendida desde Puerto Rico",
+    "date": "1644–1648",
+    "title": "San Martín dependía materialmente de San Juan para su defensa",
+    "text": "Durante el ataque holandés de 1644 llegaron refuerzos desde Puerto Rico a la guarnición española de San Martín. En 1648 la guarnición fue evacuada a Puerto Rico cuando España abandonó la isla; las fuentes puertorriqueñas describen además el costo que suponía sostener y defender San Martín desde San Juan.",
+    "sourceTitle": "Salvador Brau · síntesis histórica sobre San Martín y Tórtola",
+    "sourceUrl": "https://www.larramendi.es/es/catalogo_imagenes/grupo.do?path=1031922"
+  },
+  "saint-kitts": {
+    "label": "Operaciones punitivas del siglo XVII",
+    "date": "Siglo XVII",
+    "title": "San Cristóbal figura entre las islas atendidas desde Puerto Rico",
+    "text": "Una síntesis del Instituto de Cultura Puertorriqueña describe a Puerto Rico como base de operaciones punitivas contra piratas y corsarios en las islas de Barlovento y enumera a San Cristóbal entre los lugares de los que fueron desalojados repetidamente. No asignamos aquí una fecha concreta a una expedición puertorriqueña específica porque la fuente resumida no la fija.",
+    "sourceTitle": "Prontuario histórico de Puerto Rico · Instituto de Cultura Puertorriqueña",
+    "sourceUrl": "https://www.larramendi.es/es/catalogo_imagenes/grupo.do?path=1031923"
+  }
+};
+
 
 let coastlineData = { type:"FeatureCollection", features:[] };
 async function loadCoastlineData(){
@@ -214,16 +260,16 @@ function greatCirclePoints(a,b,n=80){
   return pts;
 }
 
-function ringToPath(ring,W,H){
-  return ring.map(([lon,lat],i)=>{ const [x,y]=project(lat,lon,W,H); return `${i?'L':'M'}${x.toFixed(2)},${y.toFixed(2)}`; }).join(' ') + ' Z';
+function ringToPath(ring,W,H,proj=project){
+  return ring.map(([lon,lat],i)=>{ const [x,y]=proj(lat,lon,W,H); return `${i?'L':'M'}${x.toFixed(2)},${y.toFixed(2)}`; }).join(' ') + ' Z';
 }
-function geometryToPath(geometry,W,H){
+function geometryToPath(geometry,W,H,proj=project){
   if(!geometry) return '';
   const polys=geometry.type==='Polygon' ? [geometry.coordinates] : geometry.type==='MultiPolygon' ? geometry.coordinates : [];
-  return polys.map(poly=>poly.map(ring=>ringToPath(ring,W,H)).join(' ')).join(' ');
+  return polys.map(poly=>poly.map(ring=>ringToPath(ring,W,H,proj)).join(' ')).join(' ');
 }
-function coastlineSvg(W,H){
-  return coastlineData.features.map(f=>`<path class="map-land" data-coast="${esc(f.properties?.name||'')}" d="${geometryToPath(f.geometry,W,H)}"/>`).join('');
+function coastlineSvg(W,H,proj=project){
+  return coastlineData.features.map(f=>`<path class="map-land" data-coast="${esc(f.properties?.name||'')}" d="${geometryToPath(f.geometry,W,H,proj)}"/>`).join('');
 }
 
 function mapSvg({highlight=null, compact=false}={}){
@@ -246,8 +292,56 @@ function mapSvg({highlight=null, compact=false}={}){
     <polyline class="map-route" points="${poly}"/>
     <polyline class="map-centerline" points="${ccp}"/>
     <polyline class="map-geodesic" points="${gcp}"/>
-    ${islands.map((d,i)=>{const [x,y]=routePts[i]; const isH=highlight===d.slug; const isEnd=d.slug==='monito'||d.slug==='dominica'; return `<g><a href="/isla/${d.slug}" data-link aria-label="${esc(d.name)}"><circle class="map-point" cx="${x}" cy="${y}" r="${isH?8:isEnd?5.6:3.4}" fill="${isH?'#c96f49':isEnd?'#c96f49':'#26515c'}" stroke="#f4eee2" stroke-width="${isH?3:1.5}" opacity="${highlight && !isH ? .46 : 1}"/></a>${labels.has(d.name)?`<text class="map-label" x="${x+7}" y="${y-7}">${esc(d.name)}</text>`:''}</g>`}).join('')}
+    ${islands.map((d,i)=>{const [x,y]=routePts[i]; const isH=highlight===d.slug; const isEnd=d.slug==='monito'||d.slug==='dominica'; return `<g class="map-island-node"><a class="map-island-link" href="/isla/${d.slug}" data-link aria-label="Abrir ficha de ${esc(d.name)}"><title>Abrir ficha: ${esc(d.name)}</title><circle class="map-hit" cx="${x}" cy="${y}" r="13"/><circle class="map-point" cx="${x}" cy="${y}" r="${isH?8:isEnd?5.6:4.4}" fill="${isH?'#c96f49':isEnd?'#c96f49':'#26515c'}" stroke="#f4eee2" stroke-width="${isH?3:1.5}" opacity="${highlight && !isH ? .46 : 1}"/>${labels.has(d.name)?`<text class="map-label map-link-label" x="${x+8}" y="${y-8}">${esc(d.name)}</text>`:''}</a></g>`;}).join('')}
+    <text class="map-interactive-hint" x="684" y="372" text-anchor="end">22 marcadores · haz clic para abrir cada ficha</text>
     <g class="map-legend" transform="translate(42 390)"><rect class="map-legend-bg" width="274" height="76" rx="14"/><line class="legend-geodesic" x1="14" y1="18" x2="52" y2="18"/><text x="62" y="21" class="map-label">Geodésica Monito–Dominica</text><line class="legend-centerline" x1="14" y1="38" x2="52" y2="38"/><text x="62" y="41" class="map-label">Eje central · regresión esférica</text><line class="legend-route" x1="14" y1="58" x2="52" y2="58"/><text x="62" y="61" class="map-label">Secuencia de unidades</text></g>
+  </svg>`;
+}
+
+function nearestIslandRows(d,count=5){
+  return islands
+    .filter(x=>x.slug!==d.slug)
+    .map(x=>({d:x,km:haversineKm(d,x)}))
+    .sort((a,b)=>a.km-b.km)
+    .slice(0,count);
+}
+
+function localMapProjector(d,neighbors,W=720,H=500,pad=46){
+  const pts=[d,...neighbors.map(x=>x.d)];
+  let halfLat=Math.max(.62,...pts.map(x=>Math.abs(x.lat-d.lat)*1.28));
+  let halfLon=Math.max(.88,...pts.map(x=>Math.abs(x.lon-d.lon)*1.28));
+  const areaBoost=Math.min(1.25,Math.sqrt(Math.max(d.area,.05))/48);
+  halfLat=Math.min(1.85,Math.max(halfLat,.58+areaBoost*.38));
+  halfLon=Math.min(2.55,Math.max(halfLon,.82+areaBoost*.92));
+  const midLat=d.lat, cos=Math.cos(degToRad(midLat));
+  const usableW=W-2*pad, usableH=H-2*pad;
+  const scale=Math.min(usableW/(2*halfLon*cos), usableH/(2*halfLat));
+  const proj=(lat,lon)=>[W/2+(lon-d.lon)*cos*scale,H/2-(lat-d.lat)*scale];
+  return {proj,halfLat,halfLon};
+}
+
+function localMapSvg(d){
+  const W=720,H=500;
+  const neighbors=nearestIslandRows(d,5);
+  const {proj}=localMapProjector(d,neighbors,W,H);
+  const coast=coastlineSvg(W,H,(lat,lon)=>proj(lat,lon));
+  const visible=[{d,km:0},...neighbors];
+  const focal=proj(d.lat,d.lon);
+  const labelWidth=Math.min(280,Math.max(110,d.name.length*8.2+28));
+  const labelX=Math.max(12,Math.min(W-labelWidth-12,focal[0]+16));
+  const labelY=Math.max(44,Math.min(H-58,focal[1]-26));
+  return `<svg class="map-svg local-map-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Mapa local de ${esc(d.name)} y sus islas vecinas">
+    <rect class="map-ocean" width="${W}" height="${H}"/>
+    ${coast}
+    ${visible.map(({d:x,km})=>{
+      const [px,py]=proj(x.lat,x.lon);
+      const focalNode=x.slug===d.slug;
+      const name=focalNode?x.name:(x.name.length>22?x.name.replace('Saint-Martin / Sint Maarten','St. Martin'):x.name);
+      return `<g class="${focalNode?'local-focal-node':'local-neighbor-node'}"><a class="map-island-link" href="/isla/${x.slug}" data-link aria-label="${focalNode?'Ficha actual':'Abrir ficha de '+esc(x.name)}"><title>${focalNode?esc(x.name):`${esc(x.name)} · ${fmt(km/1.609344,1)} mi`}</title><circle class="map-hit" cx="${px}" cy="${py}" r="${focalNode?18:13}"/><circle class="map-point" cx="${px}" cy="${py}" r="${focalNode?8:4.5}"/></a>${focalNode?'':`<text class="map-neighbor-label" x="${px+8}" y="${py-7}">${esc(name)}</text>`}</g>`;
+    }).join('')}
+    <g class="local-focal-label" transform="translate(${labelX},${labelY})"><rect width="${labelWidth}" height="38" rx="12"/><text x="14" y="25">${esc(d.name)}</text></g>
+    <g class="local-map-caption" transform="translate(18 18)"><rect width="176" height="30" rx="10"/><text x="12" y="20">ZOOM LOCAL · VECINOS PRÓXIMOS</text></g>
+    <text class="local-map-note" x="${W-18}" y="${H-18}" text-anchor="end">Siluetas modernas · marcadores enlazan a sus fichas</text>
   </svg>`;
 }
 
@@ -343,7 +437,7 @@ function islandBrowser(showTable=true){
 }
 
 function islandCards(rows){
-  return rows.map((d,i)=>`<a class="island-card" style="--shape-rotate:${(i*17)%80-25}deg" href="/isla/${d.slug}" data-link><span class="index">${String(islands.indexOf(d)+1).padStart(2,'0')}</span><span class="area">${fmtSmart(d.area)} mi²</span><h3>${esc(d.name)}</h3><p>${esc(d.group)}</p></a>`).join('');
+  return rows.map((d,i)=>`<a class="island-card" style="--shape-rotate:${(i*17)%80-25}deg" href="/isla/${d.slug}" data-link><span class="index">${String(islands.indexOf(d)+1).padStart(2,'0')}</span><span class="area">${fmtSmart(d.area)} mi²</span><h3>${esc(d.name)}</h3><p>${esc(d.group)}</p>${rescueStories[d.slug]?`<span class="rescue-badge">Rescate documentado</span>`:''}</a>`).join('');
 }
 function islandTable(rows){
   return `<div class="data-table-wrap"><table><thead><tr><th>#</th><th>Isla</th><th>Grupo</th><th>Lat.</th><th>Lon.</th><th>Área mi²</th><th>Área km²</th><th>Estatus 1570</th></tr></thead><tbody>${rows.map(d=>`<tr><td>${islands.indexOf(d)+1}</td><td><a class="table-link" href="/isla/${d.slug}" data-link>${esc(d.name)}</a></td><td>${esc(d.group)}</td><td>${d.lat.toFixed(4)}°N</td><td>${Math.abs(d.lon).toFixed(4)}°O</td><td>${fmtSmart(d.area)}</td><td>${fmtSmart(d.area*KM2_PER_MI2)}</td><td>${esc(d.status)}</td></tr>`).join('')}</tbody></table></div>`;
@@ -359,6 +453,8 @@ function islandPage(slug){
   const km2=d.area*KM2_PER_MI2;
   const distFromMonito=vincentyKm(monito,d)/1.609344;
   const epsteinFact=d.slug==='islas-virgenes' ? `<div class="callout"><strong>Dato geográfico interesante.</strong> Little Saint James —conocida posteriormente por su asociación con Jeffrey Epstein— está dentro del conjunto geográfico de las Islas Vírgenes, cerca de St. Thomas. La Real Cédula de 1519 incorpora <em>“Las Vírgenes”</em> como grupo, pero no enumera Little Saint James individualmente; por eso esta inclusión es una inferencia geográfica del grupo, no una mención nominal del siglo XVI. <a href="https://pubs.usgs.gov/of/1985/0297/report.pdf" target="_blank" rel="noreferrer">USGS ↗</a> · <a href="https://pares.mcu.es/ParesBusquedas20/catalogo/description/247774" target="_blank" rel="noreferrer">PARES ↗</a> · <a href="https://www.justice.gov/epstein/doj-disclosures/court-records-matter-estate-jeffrey-e-epstein-deceased-no-st-21-rv-00005-vi-super-ct-2021" target="_blank" rel="noreferrer">DOJ ↗</a></div>` : '';
+  const rescue=rescueStories[d.slug];
+  const rescueBlock=rescue ? `<section class="section section-tight"><div class="rescue-card"><div class="rescue-meta"><span>${esc(rescue.label)}</span><strong>${esc(rescue.date)}</strong></div><div class="rescue-kicker">EL VIDEO Y SU CONTEXTO HISTÓRICO</div><h2>${esc(rescue.title)}</h2><p>${esc(rescue.text)}</p><div class="rescue-links"><a href="https://www.youtube.com/watch?v=ez03o2q7pr4" target="_blank" rel="noreferrer">Ver el video ↗</a><a href="${rescue.sourceUrl}" target="_blank" rel="noreferrer">${esc(rescue.sourceTitle)} ↗</a></div></div></section>` : '';
   return shell(`
     <section class="page-hero"><div class="page-hero-inner">
       <div class="breadcrumbs"><a href="/" data-link>Archipiélago</a><span>›</span><a href="/islas" data-link>Islas</a><span>›</span><span>${esc(d.name)}</span></div>
@@ -370,10 +466,11 @@ function islandPage(slug){
       <div class="fact-grid"><div class="fact"><span class="label">Área</span><strong>${fmtSmart(d.area)} mi²</strong></div><div class="fact"><span class="label">Área métrica</span><strong>${fmtSmart(km2)} km²</strong></div><div class="fact"><span class="label">Latitud</span><strong>${d.lat.toFixed(4)}°N</strong></div><div class="fact"><span class="label">Longitud</span><strong>${Math.abs(d.lon).toFixed(4)}°O</strong></div></div>
     </section>
     <section class="section section-tight"><div class="two-col">
-      <div><div class="section-kicker">Ubicación regional</div><h2 class="section-title">${esc(d.name)} dentro de la cadena</h2><p class="section-intro">La línea naranja representa la geodésica Monito–Dominica; la línea azul verdosa es el eje central ajustado sobre la esfera y la gris sigue la secuencia de unidades. Esta ficha resalta el centroide utilizado para los cálculos.</p><div class="panel" style="margin-top:24px"><h3>Distancia desde Monito</h3><p><strong style="font-family:Georgia,serif;font-size:2.2rem;color:var(--ink)">${fmt(distFromMonito,1)} mi</strong><br>medidas sobre WGS-84 entre centroides representativos.</p></div></div>
-      <div class="island-map-panel">${mapSvg({highlight:d.slug, compact:true})}</div>
+      <div><div class="section-kicker">Entorno inmediato</div><h2 class="section-title">${esc(d.name)} y sus islas vecinas</h2><p class="section-intro">Esta ficha usa un encuadre local distinto del mapa general: la isla seleccionada queda en el centro y aparecen las unidades más próximas. Cada marcador vecino abre su propia ficha.</p><div class="panel" style="margin-top:24px"><h3>Distancia desde Monito</h3><p><strong style="font-family:Georgia,serif;font-size:2.2rem;color:var(--ink)">${fmt(distFromMonito,1)} mi</strong><br>medidas sobre WGS-84 entre centroides representativos.</p></div></div>
+      <div class="island-map-panel local-map-panel">${localMapSvg(d)}</div>
     </div></section>
     <section class="section section-tight"><div class="status-card" data-level="${d.confidence}"><h3>Papel en la reconstrucción de 1570</h3><p><strong>${esc(d.status)}.</strong> ${d.confidence==='alto'?'Su relación con la sede de San Juan es el anclaje más sólido del modelo.':d.confidence==='medio'?'La inclusión es razonable dentro del marco histórico general, pero conviene no presentarla como una enumeración literal sin el instrumento primario correspondiente.':'La inclusión es condicional y depende de interpretar de forma continua el arco geográfico; la documentación disponible no autoriza a tratarla como una certeza insular individual para 1570.'}</p></div></section>
+    ${rescueBlock}
     <section class="section section-tight"><div class="two-col"><div class="panel"><h3>Cómo leer el área</h3><p>${fmtSmart(d.area)} mi² (${fmtSmart(km2)} km²) es una superficie terrestre moderna utilizada como proxy geográfico. No pretende representar una medición de costa efectuada en 1570.</p></div><div class="panel"><h3>Por qué importa</h3><p>${d.area>250?'Es una de las unidades que más pesan en el total de área terrestre del modelo.':d.area<1?'Su efecto sobre el área total es mínimo; su valor es sobre todo cartográfico y topológico dentro de la cadena insular.':'Aporta una fracción intermedia del área y ayuda a representar la continuidad física del arco insular.'}</p></div></div>
       ${epsteinFact}
       <div class="prev-next">${prev?`<a href="/isla/${prev.slug}" data-link><small>← Isla anterior</small><strong>${esc(prev.name)}</strong></a>`:'<span></span>'}${next?`<a class="next" href="/isla/${next.slug}" data-link><small>Isla siguiente →</small><strong>${esc(next.name)}</strong></a>`:'<a class="next" href="/" data-link><small>Volver al</small><strong>Archipiélago</strong></a>'}</div>
