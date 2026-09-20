@@ -104,17 +104,20 @@ img, svg { max-width: 100%; }
 .brand-mark svg { width: 23px; height: 23px; }
 .nav-links { display: flex; align-items: center; gap: 6px; }
 .nav-link {
+  min-height: 44px;
   text-decoration: none;
   color: var(--ink-soft);
   padding: 9px 12px;
   border-radius: 999px;
   font-size: .92rem;
   font-weight: 650;
+  display: inline-flex;
+  align-items: center;
 }
 .nav-link:hover, .nav-link[aria-current="page"] { color: var(--ink); background: rgba(7, 91, 58, .08); }
 .theme-toggle {
   min-width: 92px;
-  height: 40px;
+  height: 44px;
   padding: 0 12px;
   display: inline-flex;
   align-items: center;
@@ -200,6 +203,7 @@ img, svg { max-width: 100%; }
 .hero-lede { max-width: 680px; font-size: clamp(1.05rem, 1.7vw, 1.25rem); color: rgba(255,250,240,.82); }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
 .btn {
+  min-height: 44px;
   border: 0;
   border-radius: 999px;
   padding: 12px 18px;
@@ -381,6 +385,7 @@ img, svg { max-width: 100%; }
 .search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--ink-soft); }
 .search-input {
   width: 100%;
+  min-height: 44px;
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--ink);
@@ -648,7 +653,7 @@ tr:last-child td { border-bottom: 0; }
 @media (max-width: 720px) {
   .nav { padding: 0 16px; gap: 10px; }
   .brand span:last-child { display: none; }
-  .nav-link { padding: 8px 10px; font-size: .84rem; }
+  .nav-link { min-height: 44px; padding: 8px 10px; font-size: .84rem; }
   .hero { border-radius: 0 0 28px 28px; }
   .hero-inner { padding: 42px 18px; min-height: auto; gap: 28px; }
   .hero-inner-heraldic {
@@ -676,8 +681,20 @@ tr:last-child td { border-bottom: 0; }
   .rescue-meta { align-items: flex-start; flex-direction: column; gap: 5px; }
   .rescue-card { padding: 24px; }
   .local-map-caption { transform: translate(12px,12px); }
-  .theme-toggle { min-width: 42px; width: 42px; padding: 0; }
+  .theme-toggle { min-width: 44px; width: 44px; height: 44px; padding: 0; }
   .theme-toggle-text { display: none; }
+}
+
+@media (pointer: coarse) {
+  .map-hit {
+    stroke: transparent;
+    stroke-width: 22px;
+    vector-effect: non-scaling-stroke;
+    pointer-events: all;
+  }
+  .map-island-link, .btn, .nav-link, .theme-toggle, .prev-next a {
+    touch-action: manipulation;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
