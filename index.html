@@ -6,11 +6,37 @@
   <meta name="description" content="Reconstrucción geográfico-histórica de la jurisdicción eclesiástica de San Juan Bautista del Boriquén hacia 1570, con áreas insulares y cálculos geodésicos." />
   <meta name="theme-color" content="#183842" />
   <title>San Juan Bautista del Boriquén en 1570</title>
+  <script>
+    (() => {
+      const isGitHubPages = location.hostname.endsWith('github.io');
+      const base = isGitHubPages ? '/san-juan-bautista-1570/' : '/';
+      window.__SITE_BASE__ = base;
+      try {
+        const saved = localStorage.getItem('sjb-theme');
+        const systemDark = matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.theme = saved || (systemDark ? 'dark' : 'light');
+      } catch (_) {
+        document.documentElement.dataset.theme = 'light';
+      }
+      const css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = base + 'styles.css';
+      document.head.appendChild(css);
+    })();
+  </script>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23183842'/%3E%3Cpath d='M10 38c12-18 31-21 44-12-5 3-9 7-11 14-12-5-23-3-33 4z' fill='%23d2b58b'/%3E%3Ccircle cx='45' cy='18' r='5' fill='%23d7794b'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="/styles.css" />
+
 </head>
 <body>
   <div id="app"></div>
-  <script type="module" src="/app.js"></script>
+  <script>
+    (() => {
+      const js = document.createElement('script');
+      js.type = 'module';
+      js.src = (window.__SITE_BASE__ || '/') + 'app.js';
+      document.body.appendChild(js);
+    })();
+  </script>
+
 </body>
 </html>
