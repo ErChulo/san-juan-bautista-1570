@@ -119,7 +119,7 @@ function mapSvg({highlight=null, compact=false}={}){
   const gc=greatCirclePoints(monito,dominica).map(d=>project(d.lat,d.lon,W,H));
   const poly=routePts.map(p=>p.join(',')).join(' ');
   const gcp=gc.map(p=>p.join(',')).join(' ');
-  const labels = compact ? new Set(["Monito","Puerto Rico","Anegada","Antigua","Basse-Terre","Dominica"]) : new Set(["Monito","Puerto Rico","Anegada","Anguilla","Saint Kitts","Antigua","Basse-Terre","Dominica"]);
+  const labels = compact ? new Set(["Monito","Puerto Rico","Islas Vírgenes","Sombrero","Antigua","Guadalupe","Dominica"]) : new Set(["Monito","Puerto Rico","Islas Vírgenes","Sombrero","Anguilla","Saint Kitts","Antigua","Guadalupe","Dominica"]);
   const landShapes = [
     `<path d="M45 172c50-38 122-46 172-19 26 14 28 41-6 54-56 21-126 19-166-6-19-12-18-20 0-29z" fill="#b8c6a5" opacity=".64"/>`,
     `<path d="M392 82c40-17 76-12 103 4 17 10 16 24-3 31-38 13-76 8-99-4-14-8-14-23-1-31z" fill="#c9d1b2" opacity=".5"/>`,
@@ -172,13 +172,12 @@ function homePage(){
     <section class="section" id="resultados">
       <div class="section-kicker">La respuesta numérica</div>
       <h2 class="section-title">Una jurisdicción insular de escala regional</h2>
-      <p class="section-intro">El modelo suma las principales unidades insulares desde el núcleo de Puerto Rico hasta Dominica. La cifra exacta de la tabla y la cifra ajustada responden a preguntas distintas: la primera suma sólo las 22 unidades de trabajo; varios conjuntos insulares se agrupan para conservar la escala narrativa del video.</p>
+      <p class="section-intro">El anfitrión resume la extensión en 22 islas o unidades. Este sitio conserva ese número como marco principal y agrupa ciertos conjuntos modernos para que el conteo histórico y el cálculo físico puedan convivir sin crear una falsa discrepancia.</p>
       <div class="metric-grid">
-        <div class="metric-card featured"><strong>${fmt(explicitArea,3)}</strong><span>mi² · suma explícita de 22 unidades</span></div>
-        <div class="metric-card"><strong>≈${fmt(adjustedArea,0)}</strong><span>mi² · estimación ajustada con cayos menores</span></div>
-        <div class="metric-card"><strong>${fmt(directMiles,1)}</strong><span>mi · geodésica WGS-84 Monito → Dominica</span></div>
-        <div class="metric-card"><strong>${fmt(routeMiles,1)}</strong><span>mi · ruta acumulada por los 22 unidades</span></div>
-      </div>
+        <div class="metric-card featured"><strong>22</strong><span>unidades · conteo principal del video</span></div>
+        <div class="metric-card"><strong>${fmt(explicitArea,3)}</strong><span>mi² · suma técnica de superficie terrestre moderna</span></div>
+        <div class="metric-card"><strong>${fmt(directMiles,3)}</strong><span>mi · geodésica WGS-84 Monito → Dominica</span></div>
+        <div class="metric-card"><strong>${fmt(directKm,3)}</strong><span>km · la misma geodésica sobre WGS-84</span></div></div>
       <div class="callout"><strong>Cómo leer el 22.</strong> Es la cifra narrativa del video. Las fuentes históricas no siempre cuentan “islas” con la granularidad moderna: por ejemplo, pueden tratar Las Vírgenes o Guadalupe como una sola unidad. El sitio conserva el 22 y usa agrupaciones explícitas para que el cálculo sea reproducible sin presentar una falsa precisión histórica.</div>
     </section>
 
