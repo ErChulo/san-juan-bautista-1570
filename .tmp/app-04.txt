@@ -1,0 +1,45 @@
+>
+        <div class="metric-card featured"><strong>${fmt(explicitArea,3)}</strong><span>mi² · suma explícita de 31 unidades</span></div>
+        <div class="metric-card"><strong>≈${fmt(adjustedArea,0)}</strong><span>mi² · estimación ajustada con cayos menores</span></div>
+        <div class="metric-card"><strong>${fmt(directMiles,1)}</strong><span>mi · geodésica WGS-84 Monito → Dominica</span></div>
+        <div class="metric-card"><strong>${fmt(routeMiles,1)}</strong><span>mi · ruta acumulada por los 31 centroides</span></div>
+      </div>
+      <div class="callout"><strong>Corrección cardinal importante.</strong> Monito es el extremo occidental del modelo, pero Anegada está más al norte. Dominica es el extremo meridional, pero La Désirade está más al este. Aun así, Monito–Dominica es la pareja de centroides más separada del conjunto y por eso funciona bien como diámetro lineal.</div>
+    </section>
+
+    <section class="section section-tight"><div class="two-col">
+      <div class="panel"><div class="section-kicker">Qué significa “jurisdicción”</div><h3>La evidencia apunta sobre todo a una jurisdicción episcopal</h3><p>La lectura más prudente no es la de una provincia civil homogénea administrada efectivamente desde San Juan. La reconstrucción se apoya en la expansión histórica del obispado de San Juan y en una síntesis que sitúa la extensión hacia las islas de Barlovento hasta Dominica.</p></div>
+      <div class="panel"><div class="section-kicker">Qué NO significa el área</div><h3>No es un catastro de 1570</h3><p>Las áreas son superficies terrestres modernas usadas como proxy físico. La incertidumbre histórica —qué islas estaban anexadas exactamente en esa fecha— es mayor que el error matemático de la distancia geodésica.</p></div>
+    </div></section>
+
+    <section class="section">
+      <div class="section-kicker">Curvatura terrestre</div>
+      <h2 class="section-title">De Monito a Dominica sobre el elipsoide WGS-84</h2>
+      <p class="section-intro">La medición principal usa una solución geodésica elipsoidal de Vincenty. Como control, se calcula también la distancia de gran círculo sobre una esfera de radio medio terrestre.</p>
+      <div class="two-col" style="margin-top:30px">
+        <div class="panel"><h3>Resultado elipsoidal</h3><p><strong style="font-family:Georgia,serif;font-size:2.3rem;color:var(--ink)">${fmt(directMiles,3)} mi</strong><br>${fmt(directKm,3)} km sobre WGS-84.</p><div class="formula">a = 6,378,137 m\nf = 1 / 298.257223563\nb = (1 − f)a\n\nVincenty⁻¹(Monito, Dominica)\n= ${fmt(directMiles,3)} mi</div></div>
+        <div class="panel"><h3>Control esférico</h3><p><strong style="font-family:Georgia,serif;font-size:2.3rem;color:var(--ink)">${fmt(directSphereMiles,3)} mi</strong><br>La diferencia frente al elipsoide es de sólo ${fmt(Math.abs(directMiles-directSphereMiles),3)} mi.</p><div class="formula">h = sin²(Δφ/2) + cos φ₁ cos φ₂ sin²(Δλ/2)\nc = 2 asin(√h)\nd = Rc</div></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-kicker">Explorar la cadena insular</div>
+      <h2 class="section-title">31 páginas, una por isla</h2>
+      <p class="section-intro">Cada ficha conserva la misma estructura: posición, superficie, papel en la reconstrucción de 1570, nivel de cautela documental y ubicación dentro de la cadena.</p>
+      ${islandBrowser(false)}
+    </section>
+
+    <section class="section"><div class="section-kicker">Video original</div><h2 class="section-title">El punto de partida de la pregunta</h2><p class="section-intro">El sitio está concebido como complemento del video: mantiene la pregunta histórica, pero separa los hechos documentales de las inferencias geográficas y hace explícitos los cálculos.</p><div class="video-wrap" style="margin-top:30px"><iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/ez03o2q7pr4" title="Video de referencia sobre la jurisdicción de Puerto Rico en 1570" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></section>
+  `,"home");
+}
+
+function islandBrowser(showTable=true){
+  return `<div class="island-browser">
+    <div class="search-row"><div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="island-search" class="search-input" type="search" placeholder="Buscar isla o grupo…" autocomplete="off" aria-label="Buscar isla" /></div></div>
+    <div id="island-grid" class="island-grid">${islandCards(islands)}</div>
+    ${showTable?`<div id="table-wrap">${islandTable(islands)}</div>`:''}
+  </div>`;
+}
+
+function islandCards(rows){
+  return rows.map((d,i)=>`<a class="island-card" style="--shape-rotate:${(i*17)%80-25}deg" href="/isla/${d.slug}" data-link><span class="index">${String(islands.indexOf(d)+1).padStart(2,'0')}</span><span class="area">${fmtSmart(d.area)} mi²</span><h3>${esc
