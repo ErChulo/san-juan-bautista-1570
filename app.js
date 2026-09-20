@@ -28,7 +28,8 @@ const sources = [
   { type:"Fuente primaria", title:"PARES — Anexión de islas al obispado de la isla de San Juan, 15 de enero de 1519", url:"https://pares.mcu.es/ParesBusquedas20/catalogo/description/247777", text:"Registro del Archivo General de Indias sobre la petición real de anexar islas al obispado de San Juan para mejorar su sostenimiento." },
   { type:"Fuente primaria", title:"PARES — Real Cédula a Luis Carros sobre las islas a anexar", url:"https://pares.mcu.es/ParesBusquedas20/catalogo/description/247774", text:"El catálogo enumera topónimos como Santa Cruz, Las Vírgenes, San Martín, El Sombrero, Sava, San Cristóbal, Las Nieves, Redonda, Monserrat, Antigua, Barbuda, Guadalupe, Deseada, Marigalante, Todos los Santos y Dominica, entre otros." },
   { type:"Geografía del siglo XVI", title:"Juan López de Velasco — Geografía y descripción universal de las Indias, 1571–1574", url:"https://www.cervantesvirtual.com/obra/geografia-y-descripcion-universal-de-las-indias-859811/", text:"Aporta descripciones contemporáneas de varias islas y topónimos del arco, incluidos Vírgenes, Anegada, Sombrero, El Águila, San Martín, San Cristóbal, San Bartolomé, Redonda y Monserrate." },
-  { type:"Síntesis histórica", title:"Catholic Encyclopedia — Puerto Rico", url:"https://www.newadvent.org/cathen/12291b.htm", text:"Resume que en 1519 el territorio diocesano se amplió para incluir las islas de Barlovento de las Antillas Menores desde Santa Cruz hasta Dominica." }
+  { type:"Síntesis histórica", title:"Catholic Encyclopedia — Puerto Rico", url:"https://www.newadvent.org/cathen/12291b.htm", text:"Resume que en 1519 el territorio diocesano se amplió para incluir las islas de Barlovento de las Antillas Menores desde Santa Cruz hasta Dominica." },
+  { type:"Cartografía moderna", title:"USGS — Geologic map of St. Thomas, U.S. Virgin Islands", url:"https://pubs.usgs.gov/of/1985/0297/report.pdf", text:"El mapa federal identifica Little St. James entre las islas menores del entorno de St. Thomas; se usa sólo para justificar su pertenencia geográfica al grupo moderno de las Islas Vírgenes." }
 ];
 
 const KM2_PER_MI2 = 2.589988110336;
@@ -85,6 +86,83 @@ const directKm = vincentyKm(monito, dominica);
 const directMiles = directKm / 1.609344;
 const directSphereMiles = haversineKm(monito, dominica) / 1.609344;
 
+
+function dot3(a,b){ return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
+function norm3(a){ return Math.hypot(a[0],a[1],a[2]); }
+function normalize3(a){ const n=norm3(a); return a.map(v=>v/n); }
+function add3(a,b){ return [a[0]+b[0],a[1]+b[1],a[2]+b[2]]; }
+function scale3(a,c){ return [a[0]*c,a[1]*c,a[2]*c]; }
+function cross3(a,b){ return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]; }
+function vecFromLatLon(lat,lon){
+  const p=degToRad(lat), l=degToRad(lon);
+  return [Math.cos(p)*Math.cos(l),Math.cos(p)*Math.sin(l),Math.sin(p)];
+}
+function latLonFromVec(x){
+  return {lat:radToDeg(Math.asin(Math.max(-1,Math.min(1,x[2])))),lon:radToDeg(Math.atan2(x[1],x[0]))};
+}
+function solve3(A,b){
+  const m=A.map((row,i)=>[...row,b[i]]);
+  for(let k=0;k<3;k++){
+    let p=k; for(let i=k+1;i<3;i++) if(Math.abs(m[i][k])>Math.abs(m[p][k])) p=i;
+    [m[k],m[p]]=[m[p],m[k]];
+    const q=m[k][k]; if(Math.abs(q)<1e-14) throw new Error("Singular quadratic fit");
+    for(let j=k;j<4;j++) m[k][j]/=q;
+    for(let i=0;i<3;i++) if(i!==k){
+      const z=m[i][k]; for(let j=k;j<4;j++) m[i][j]-=z*m[k][j];
+    }
+  }
+  return [m[0][3],m[1][3],m[2][3]];
+}
+function sphericalCenterline(data,n=180){
+  const X=data.map(d=>vecFromLatLon(d.lat,d.lon));
+  const mu=normalize3(X.reduce((a,x)=>add3(a,x),[0,0,0]));
+  const ll=latLonFromVec(mu), p=degToRad(ll.lat), l=degToRad(ll.lon);
+  const east=[-Math.sin(l),Math.cos(l),0];
+  const north=[-Math.sin(p)*Math.cos(l),-Math.sin(p)*Math.sin(l),Math.cos(p)];
+  const logs=X.map(x=>{
+    const c=Math.max(-1,Math.min(1,dot3(mu,x))), th=Math.acos(c);
+    if(th<1e-14) return [0,0,0];
+    const w=add3(x,scale3(mu,-c));
+    return scale3(w,th/norm3(w));
+  });
+  const xy=logs.map(y=>[dot3(y,east),dot3(y,north)]);
+  const sxx=xy.reduce((a,z)=>a+z[0]*z[0],0)/xy.length;
+  const syy=xy.reduce((a,z)=>a+z[1]*z[1],0)/xy.length;
+  const sxy=xy.reduce((a,z)=>a+z[0]*z[1],0)/xy.length;
+  const alpha=.5*Math.atan2(2*sxy,sxx-syy);
+  let e1=normalize3(add3(scale3(east,Math.cos(alpha)),scale3(north,Math.sin(alpha))));
+  let e2=normalize3(cross3(mu,e1));
+  let uv=logs.map(y=>[dot3(y,e1),dot3(y,e2)]);
+  if(uv[0][0]>uv[uv.length-1][0]){
+    e1=scale3(e1,-1); e2=scale3(e2,-1);
+    uv=logs.map(y=>[dot3(y,e1),dot3(y,e2)]);
+  }
+  const sums={n:uv.length,u:0,u2:0,u3:0,u4:0,v:0,uv:0,u2v:0};
+  for(const [u,v] of uv){
+    const u2=u*u; sums.u+=u; sums.u2+=u2; sums.u3+=u2*u; sums.u4+=u2*u2;
+    sums.v+=v; sums.uv+=u*v; sums.u2v+=u2*v;
+  }
+  const beta=solve3(
+    [[sums.n,sums.u,sums.u2],[sums.u,sums.u2,sums.u3],[sums.u2,sums.u3,sums.u4]],
+    [sums.v,sums.uv,sums.u2v]
+  );
+  const uMin=Math.min(...uv.map(z=>z[0])), uMax=Math.max(...uv.map(z=>z[0]));
+  const points=[];
+  for(let i=0;i<=n;i++){
+    const u=uMin+(uMax-uMin)*i/n;
+    const v=beta[0]+beta[1]*u+beta[2]*u*u;
+    const y=add3(scale3(e1,u),scale3(e2,v)), th=norm3(y);
+    const x=th<1e-14?mu:add3(scale3(mu,Math.cos(th)),scale3(y,Math.sin(th)/th));
+    points.push(latLonFromVec(normalize3(x)));
+  }
+  let lengthKm=0;
+  for(let i=1;i<points.length;i++) lengthKm+=vincentyKm(points[i-1],points[i]);
+  return {points,lengthKm,lengthMiles:lengthKm/1.609344,mean:ll,beta};
+}
+const centerline=sphericalCenterline(islands);
+const centerlineKm=centerline.lengthKm;
+const centerlineMiles=centerline.lengthMiles;
+
 function fmt(n, digits=1){ return n.toLocaleString("en-US", { maximumFractionDigits: digits, minimumFractionDigits: digits }); }
 function fmtSmart(n){ return n >= 100 ? fmt(n,1) : n >= 10 ? fmt(n,2) : fmt(n,3); }
 function esc(s){ return String(s).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
@@ -117,8 +195,10 @@ function mapSvg({highlight=null, compact=false}={}){
   const gridLats=[15.5,16,16.5,17,17.5,18,18.5];
   const routePts=islands.map(d=>project(d.lat,d.lon,W,H));
   const gc=greatCirclePoints(monito,dominica).map(d=>project(d.lat,d.lon,W,H));
+  const centerPts=centerline.points.map(d=>project(d.lat,d.lon,W,H));
   const poly=routePts.map(p=>p.join(',')).join(' ');
   const gcp=gc.map(p=>p.join(',')).join(' ');
+  const ccp=centerPts.map(p=>p.join(',')).join(' ');
   const labels = compact ? new Set(["Monito","Puerto Rico","Islas Vírgenes","Sombrero","Antigua","Guadalupe","Dominica"]) : new Set(["Monito","Puerto Rico","Islas Vírgenes","Sombrero","Anguilla","Saint Kitts","Antigua","Guadalupe","Dominica"]);
   const landShapes = [
     `<path d="M45 172c50-38 122-46 172-19 26 14 28 41-6 54-56 21-126 19-166-6-19-12-18-20 0-29z" fill="#b8c6a5" opacity=".64"/>`,
@@ -131,9 +211,10 @@ function mapSvg({highlight=null, compact=false}={}){
     ${gridLons.map(l=>{const [x]=project(17,l,W,H);return `<line class="map-grid" x1="${x}" y1="32" x2="${x}" y2="468"/><text class="map-axis" x="${x+3}" y="485">${Math.abs(l)}°O</text>`}).join('')}
     ${gridLats.map(l=>{const [,y]=project(l,-64,W,H);return `<line class="map-grid" x1="34" y1="${y}" x2="686" y2="${y}"/><text class="map-axis" x="7" y="${y+3}">${l}°N</text>`}).join('')}
     <polyline class="map-route" points="${poly}"/>
+    <polyline class="map-centerline" points="${ccp}"/>
     <polyline class="map-geodesic" points="${gcp}"/>
     ${islands.map((d,i)=>{const [x,y]=routePts[i]; const isH=highlight===d.slug; const isEnd=d.slug==='monito'||d.slug==='dominica'; return `<g><a href="/isla/${d.slug}" data-link aria-label="${esc(d.name)}"><circle class="map-point" cx="${x}" cy="${y}" r="${isH?8:isEnd?5.6:3.4}" fill="${isH?'#c96f49':isEnd?'#c96f49':'#26515c'}" stroke="#f4eee2" stroke-width="${isH?3:1.5}" opacity="${highlight && !isH ? .46 : 1}"/></a>${labels.has(d.name)?`<text class="map-label" x="${x+7}" y="${y-7}">${esc(d.name)}</text>`:''}</g>`}).join('')}
-    <g transform="translate(48 36)"><rect width="232" height="52" rx="14" fill="#f7f2e8" opacity=".94"/><line x1="14" y1="17" x2="52" y2="17" stroke="#c96f49" stroke-width="3" stroke-dasharray="6 7"/><text x="62" y="20" class="map-label">Geodésica Monito–Dominica</text><line x1="14" y1="36" x2="52" y2="36" stroke="rgba(38,81,92,.45)"/><text x="62" y="39" class="map-label">Ruta insular analítica</text></g>
+    <g transform="translate(48 36)"><rect width="252" height="72" rx="14" fill="#f7f2e8" opacity=".94"/><line x1="14" y1="17" x2="52" y2="17" stroke="#c96f49" stroke-width="3" stroke-dasharray="6 7"/><text x="62" y="20" class="map-label">Geodésica Monito–Dominica</text><line x1="14" y1="36" x2="52" y2="36" stroke="#1d6b74" stroke-width="3"/><text x="62" y="39" class="map-label">Eje central · regresión esférica</text><line x1="14" y1="55" x2="52" y2="55" stroke="rgba(38,81,92,.35)"/><text x="62" y="58" class="map-label">Secuencia de unidades</text></g>
   </svg>`;
 }
 
@@ -177,7 +258,7 @@ function homePage(){
         <div class="metric-card featured"><strong>22</strong><span>unidades · conteo principal del video</span></div>
         <div class="metric-card"><strong>${fmt(explicitArea,3)}</strong><span>mi² · suma técnica de superficie terrestre moderna</span></div>
         <div class="metric-card"><strong>${fmt(directMiles,3)}</strong><span>mi · geodésica WGS-84 Monito → Dominica</span></div>
-        <div class="metric-card"><strong>${fmt(directKm,3)}</strong><span>km · la misma geodésica sobre WGS-84</span></div></div>
+        <div class="metric-card"><strong>${fmt(centerlineMiles,3)}</strong><span>mi · eje central por regresión esférica</span></div></div>
       <div class="callout"><strong>Cómo leer el 22.</strong> Es la cifra narrativa del video. Las fuentes históricas no siempre cuentan “islas” con la granularidad moderna: por ejemplo, pueden tratar Las Vírgenes o Guadalupe como una sola unidad. El sitio conserva el 22 y usa agrupaciones explícitas para que el cálculo sea reproducible sin presentar una falsa precisión histórica.</div>
     </section>
 
@@ -194,6 +275,14 @@ function homePage(){
         <div class="panel"><h3>Resultado elipsoidal</h3><p><strong style="font-family:Georgia,serif;font-size:2.3rem;color:var(--ink)">${fmt(directMiles,3)} mi</strong><br>${fmt(directKm,3)} km sobre WGS-84.</p><div class="formula">a = 6,378,137 m\nf = 1 / 298.257223563\nb = (1 − f)a\n\nVincenty⁻¹(Monito, Dominica)\n= ${fmt(directMiles,3)} mi</div></div>
         <div class="panel"><h3>Control esférico</h3><p><strong style="font-family:Georgia,serif;font-size:2.3rem;color:var(--ink)">${fmt(directSphereMiles,3)} mi</strong><br>La diferencia frente al elipsoide es de sólo ${fmt(Math.abs(directMiles-directSphereMiles),3)} mi.</p><div class="formula">h = sin²(Δφ/2) + cos φ₁ cos φ₂ sin²(Δλ/2)\nc = 2 asin(√h)\nd = Rc</div></div>
       </div>
+
+      <div class="panel" style="margin-top:24px"><div class="section-kicker">Eje central del archipiélago</div><h3>Regresión cuadrática sobre la esfera</h3><p><strong style="font-family:Georgia,serif;font-size:2.3rem;color:var(--ink)">${fmt(centerlineMiles,3)} mi</strong><br>${fmt(centerlineKm,3)} km siguiendo la tendencia central de los 22 centroides.</p><p>El ajuste da el mismo peso a cada unidad para evitar que Puerto Rico domine por superficie. Se calcula una media esférica, se llevan los puntos al plano tangente, se obtiene el eje principal, se ajusta una cuadrática transversal y se devuelve la curva a la esfera. La longitud final se integra mediante pequeños tramos geodésicos WGS-84.</p><div class="formula">xᵢ ∈ S²
+μ = normalize(Σxᵢ)
+yᵢ = Log_μ(xᵢ)
+v = β₀ + β₁u + β₂u²
+γ(u) = Exp_μ(u e₁ + v e₂)
+
+L(γ) ≈ ${fmt(centerlineMiles,3)} mi</div></div>
     </section>
 
     <section class="section">
@@ -231,6 +320,7 @@ function islandPage(slug){
   const i=islands.indexOf(d), prev=islands[i-1], next=islands[i+1];
   const km2=d.area*KM2_PER_MI2;
   const distFromMonito=vincentyKm(monito,d)/1.609344;
+  const epsteinFact=d.slug==='islas-virgenes' ? `<div class="callout"><strong>Dato geográfico interesante.</strong> Little Saint James —conocida posteriormente por su asociación con Jeffrey Epstein— está dentro del conjunto geográfico de las Islas Vírgenes, cerca de St. Thomas. La Real Cédula de 1519 incorpora <em>“Las Vírgenes”</em> como grupo, pero no enumera Little Saint James individualmente; por eso esta inclusión es una inferencia geográfica del grupo, no una mención nominal del siglo XVI. <a href="https://pubs.usgs.gov/of/1985/0297/report.pdf" target="_blank" rel="noreferrer">USGS ↗</a> · <a href="https://pares.mcu.es/ParesBusquedas20/catalogo/description/247774" target="_blank" rel="noreferrer">PARES ↗</a></div>` : '';
   return shell(`
     <section class="page-hero"><div class="page-hero-inner">
       <div class="breadcrumbs"><a href="/" data-link>Archipiélago</a><span>›</span><a href="/islas" data-link>Islas</a><span>›</span><span>${esc(d.name)}</span></div>
@@ -242,11 +332,12 @@ function islandPage(slug){
       <div class="fact-grid"><div class="fact"><span class="label">Área</span><strong>${fmtSmart(d.area)} mi²</strong></div><div class="fact"><span class="label">Área métrica</span><strong>${fmtSmart(km2)} km²</strong></div><div class="fact"><span class="label">Latitud</span><strong>${d.lat.toFixed(4)}°N</strong></div><div class="fact"><span class="label">Longitud</span><strong>${Math.abs(d.lon).toFixed(4)}°O</strong></div></div>
     </section>
     <section class="section section-tight"><div class="two-col">
-      <div><div class="section-kicker">Ubicación regional</div><h2 class="section-title">${esc(d.name)} dentro de la cadena</h2><p class="section-intro">La línea naranja representa la geodésica Monito–Dominica; la gris sigue el orden analítico isla por isla. Esta ficha resalta la posición del centroide utilizado para los cálculos.</p><div class="panel" style="margin-top:24px"><h3>Distancia desde Monito</h3><p><strong style="font-family:Georgia,serif;font-size:2.2rem;color:var(--ink)">${fmt(distFromMonito,1)} mi</strong><br>medidas sobre WGS-84 entre centroides representativos.</p></div></div>
+      <div><div class="section-kicker">Ubicación regional</div><h2 class="section-title">${esc(d.name)} dentro de la cadena</h2><p class="section-intro">La línea naranja representa la geodésica Monito–Dominica; la línea azul verdosa es el eje central ajustado sobre la esfera y la gris sigue la secuencia de unidades. Esta ficha resalta el centroide utilizado para los cálculos.</p><div class="panel" style="margin-top:24px"><h3>Distancia desde Monito</h3><p><strong style="font-family:Georgia,serif;font-size:2.2rem;color:var(--ink)">${fmt(distFromMonito,1)} mi</strong><br>medidas sobre WGS-84 entre centroides representativos.</p></div></div>
       <div class="island-map-panel">${mapSvg({highlight:d.slug, compact:true})}</div>
     </div></section>
     <section class="section section-tight"><div class="status-card" data-level="${d.confidence}"><h3>Papel en la reconstrucción de 1570</h3><p><strong>${esc(d.status)}.</strong> ${d.confidence==='alto'?'Su relación con la sede de San Juan es el anclaje más sólido del modelo.':d.confidence==='medio'?'La inclusión es razonable dentro del marco histórico general, pero conviene no presentarla como una enumeración literal sin el instrumento primario correspondiente.':'La inclusión es condicional y depende de interpretar de forma continua el arco geográfico; la documentación disponible no autoriza a tratarla como una certeza insular individual para 1570.'}</p></div></section>
     <section class="section section-tight"><div class="two-col"><div class="panel"><h3>Cómo leer el área</h3><p>${fmtSmart(d.area)} mi² (${fmtSmart(km2)} km²) es una superficie terrestre moderna utilizada como proxy geográfico. No pretende representar una medición de costa efectuada en 1570.</p></div><div class="panel"><h3>Por qué importa</h3><p>${d.area>250?'Es una de las unidades que más pesan en el total de área terrestre del modelo.':d.area<1?'Su efecto sobre el área total es mínimo; su valor es sobre todo cartográfico y topológico dentro de la cadena insular.':'Aporta una fracción intermedia del área y ayuda a representar la continuidad física del arco insular.'}</p></div></div>
+      ${epsteinFact}
       <div class="prev-next">${prev?`<a href="/isla/${prev.slug}" data-link><small>← Isla anterior</small><strong>${esc(prev.name)}</strong></a>`:'<span></span>'}${next?`<a class="next" href="/isla/${next.slug}" data-link><small>Isla siguiente →</small><strong>${esc(next.name)}</strong></a>`:'<a class="next" href="/" data-link><small>Volver al</small><strong>Archipiélago</strong></a>'}</div>
     </section>
   `,"islands");
@@ -257,7 +348,7 @@ function methodologyPage(){
     <section class="page-hero"><div class="page-hero-inner"><div class="eyebrow">Metodología y fuentes</div><h1>Cómo se construyó el modelo</h1><p class="subtitle">La prioridad es separar tres capas: lo que está documentado históricamente, lo que se infiere para construir una lista operativa y lo que se calcula matemáticamente con geografía moderna.</p></div></section>
     <section class="section">
       <div class="section-kicker">Proceso</div><h2 class="section-title">De una afirmación histórica a una cifra reproducible</h2>
-      <div class="method-grid"><div class="method-step"><span class="num">01 · VIDEO</span><h3>Preservar el relato</h3><p>El sitio parte del conteo de 22 presentado por el anfitrión y lo usa como estructura principal, sin intentar “corregir” retóricamente el video.</p></div><div class="method-step"><span class="num">02 · HISTORIA</span><h3>Comprobar y matizar</h3><p>La Real Cédula de 1519 y descripciones del siglo XVI sirven para distinguir lo claramente documentado de las normalizaciones modernas de nombres y grupos.</p></div><div class="method-step"><span class="num">03 · CÁLCULO</span><h3>Medir sin fingir precisión histórica</h3><p>Se suman áreas terrestres modernas de 22 unidades normalizadas y se usa WGS-84 para Monito–Dominica. No se añade un “ajuste” arbitrario por cayos menores.</p></div></div>
+      <div class="method-grid"><div class="method-step"><span class="num">01 · VIDEO</span><h3>Preservar el relato</h3><p>El sitio parte del conteo de 22 presentado por el anfitrión y lo usa como estructura principal, sin intentar “corregir” retóricamente el video.</p></div><div class="method-step"><span class="num">02 · HISTORIA</span><h3>Comprobar y matizar</h3><p>La Real Cédula de 1519 y descripciones del siglo XVI sirven para distinguir lo claramente documentado de las normalizaciones modernas de nombres y grupos.</p></div><div class="method-step"><span class="num">03 · CÁLCULO</span><h3>Medir sin fingir precisión histórica</h3><p>Se suman áreas terrestres modernas de 22 unidades normalizadas y se usa WGS-84 para Monito–Dominica. No se añade un “ajuste” arbitrario por cayos menores.</p></div><div class="method-step"><span class="num">04 · EJE CENTRAL</span><h3>Regresión no lineal sobre la esfera</h3><p>Los 22 centroides reciben igual peso. Tras calcular la media esférica, los puntos se proyectan mediante Log al plano tangente, se obtiene el eje principal, se ajusta una cuadrática transversal y se regresa a S² mediante Exp. La longitud se integra sobre pequeños tramos WGS-84.</p></div></div>
     </section>
     <section class="section section-tight"><div class="two-col"><div class="panel"><h3>Área total explícita</h3><div class="formula">A = Σᵢ Aᵢ\n  = ${islands.map(d=>d.area.toFixed(3)).slice(0,7).join(' + ')} + …\n  = ${explicitArea.toFixed(3)} mi²</div></div><div class="panel"><h3>Distancia principal</h3><div class="formula">d = Vincenty⁻¹[(18.1589, −67.9478),\n              (15.4347, −61.3502)]\n  = ${directMiles.toFixed(3)} mi\n  = ${directKm.toFixed(3)} km</div></div></div></section>
     <section class="section"><div class="section-kicker">Fuentes de trabajo</div><h2 class="section-title">Qué respalda la reconstrucción</h2><p class="section-intro">La documentación primaria confirma la ampliación del obispado y varios de los topónimos usados en el relato. Donde la equivalencia entre un nombre del siglo XVI y una unidad moderna no es exacta, el sitio lo declara de forma explícita.</p><div class="source-list">${sources.map(s=>`<article class="source-item"><div class="source-type">${esc(s.type)}</div><div><h3><a href="${s.url}" target="_blank" rel="noreferrer">${esc(s.title)} ↗</a></h3><p>${esc(s.text)}</p></div></article>`).join('')}</div></section>
