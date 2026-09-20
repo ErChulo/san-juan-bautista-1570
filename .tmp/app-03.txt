@@ -1,0 +1,55 @@
+s = compact ? new Set(["Monito","Puerto Rico","Anegada","Antigua","Basse-Terre","Dominica"]) : new Set(["Monito","Puerto Rico","Anegada","Anguilla","Saint Kitts","Antigua","Basse-Terre","Dominica"]);
+  const landShapes = [
+    `<path d="M45 172c50-38 122-46 172-19 26 14 28 41-6 54-56 21-126 19-166-6-19-12-18-20 0-29z" fill="#b8c6a5" opacity=".64"/>`,
+    `<path d="M392 82c40-17 76-12 103 4 17 10 16 24-3 31-38 13-76 8-99-4-14-8-14-23-1-31z" fill="#c9d1b2" opacity=".5"/>`,
+    `<path d="M531 262c33-11 68-3 78 14 8 13-4 28-28 30-27 2-61-9-65-23-3-9 3-17 15-21z" fill="#b6c59f" opacity=".54"/>`
+  ].join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mapa esquemático de las islas incluidas entre Monito y Dominica">
+    <rect width="${W}" height="${H}" fill="#e8dfcf"/>
+    ${landShapes}
+    ${gridLons.map(l=>{const [x]=project(17,l,W,H);return `<line class="map-grid" x1="${x}" y1="32" x2="${x}" y2="468"/><text class="map-axis" x="${x+3}" y="485">${Math.abs(l)}°O</text>`}).join('')}
+    ${gridLats.map(l=>{const [,y]=project(l,-64,W,H);return `<line class="map-grid" x1="34" y1="${y}" x2="686" y2="${y}"/><text class="map-axis" x="7" y="${y+3}">${l}°N</text>`}).join('')}
+    <polyline class="map-route" points="${poly}"/>
+    <polyline class="map-geodesic" points="${gcp}"/>
+    ${islands.map((d,i)=>{const [x,y]=routePts[i]; const isH=highlight===d.slug; const isEnd=d.slug==='monito'||d.slug==='dominica'; return `<g><a href="/isla/${d.slug}" data-link aria-label="${esc(d.name)}"><circle class="map-point" cx="${x}" cy="${y}" r="${isH?8:isEnd?5.6:3.4}" fill="${isH?'#c96f49':isEnd?'#c96f49':'#26515c'}" stroke="#f4eee2" stroke-width="${isH?3:1.5}" opacity="${highlight && !isH ? .46 : 1}"/></a>${labels.has(d.name)?`<text class="map-label" x="${x+7}" y="${y-7}">${esc(d.name)}</text>`:''}</g>`}).join('')}
+    <g transform="translate(48 36)"><rect width="232" height="52" rx="14" fill="#f7f2e8" opacity=".94"/><line x1="14" y1="17" x2="52" y2="17" stroke="#c96f49" stroke-width="3" stroke-dasharray="6 7"/><text x="62" y="20" class="map-label">Geodésica Monito–Dominica</text><line x1="14" y1="36" x2="52" y2="36" stroke="rgba(38,81,92,.45)"/><text x="62" y="39" class="map-label">Ruta insular analítica</text></g>
+  </svg>`;
+}
+
+function shell(content, current=""){
+  return `<div class="site-shell">
+    <header class="topbar">
+      <nav class="nav" aria-label="Navegación principal">
+        <a class="brand" href="/" data-link aria-label="Inicio">
+          <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 20c6-10 16-14 24-8-4 2-6 5-7 10-7-3-12-2-17 2z" fill="#d2b58b"/><circle cx="23" cy="8" r="3" fill="#c96f49"/></svg></span>
+          <span>San Juan Bautista · 1570</span>
+        </a>
+        <div class="nav-links">
+          <a class="nav-link" href="/" data-link ${current==='home'?'aria-current="page"':''}>Archipiélago</a>
+          <a class="nav-link" href="/islas" data-link ${current==='islands'?'aria-current="page"':''}>Islas</a>
+          <a class="nav-link" href="/metodologia" data-link ${current==='method'?'aria-current="page"':''}>Método</a>
+        </div>
+      </nav>
+    </header>
+    <main>${content}</main>
+    <footer class="footer"><div class="footer-inner"><div><strong>San Juan Bautista del Boriquén en 1570</strong><p>Proyecto cartográfico divulgativo complementario al video de referencia. Las superficies son proxies terrestres modernas; la adscripción histórica exacta de varias islas permanece condicional.</p></div><p><a href="https://www.youtube.com/watch?v=ez03o2q7pr4" target="_blank" rel="noreferrer">Ver video ↗</a></p></div></footer>
+  </div>`;
+}
+
+function homePage(){
+  return shell(`
+    <section class="hero"><div class="hero-inner">
+      <div>
+        <div class="eyebrow">Reconstrucción histórico-geográfica</div>
+        <h1>San Juan Bautista <span>del Boriquén</span> en 1570</h1>
+        <p class="hero-lede">¿Qué tan extensa era la jurisdicción vinculada a Puerto Rico en el siglo XVI? Esta experiencia traduce la pregunta del video a un modelo cartográfico reproducible: isla por isla, área por área y con una medición geodésica corregida por la curvatura terrestre.</p>
+        <div class="hero-actions"><a class="btn btn-primary" href="#resultados">Ver los resultados</a><a class="btn btn-ghost" href="/islas" data-link>Explorar 31 islas</a></div>
+      </div>
+      <div class="map-card">${mapSvg({compact:true})}</div>
+    </div></section>
+
+    <section class="section" id="resultados">
+      <div class="section-kicker">La respuesta numérica</div>
+      <h2 class="section-title">Una jurisdicción insular de escala regional</h2>
+      <p class="section-intro">El modelo suma las principales unidades insulares desde el núcleo de Puerto Rico hasta Dominica. La cifra exacta de la tabla y la cifra ajustada responden a preguntas distintas: la primera suma sólo las 31 unidades explícitas; la segunda absorbe cayos e islotes menores omitidos.</p>
+      <div class="metric-grid"
