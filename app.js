@@ -30,8 +30,32 @@ const sources = [
   { type:"Geografía del siglo XVI", title:"Juan López de Velasco — Geografía y descripción universal de las Indias, 1571–1574", url:"https://www.cervantesvirtual.com/obra/geografia-y-descripcion-universal-de-las-indias-859811/", text:"Aporta descripciones contemporáneas de varias islas y topónimos del arco, incluidos Vírgenes, Anegada, Sombrero, El Águila, San Martín, San Cristóbal, San Bartolomé, Redonda y Monserrate." },
   { type:"Síntesis histórica", title:"Catholic Encyclopedia — Puerto Rico", url:"https://www.newadvent.org/cathen/12291b.htm", text:"Resume que en 1519 el territorio diocesano se amplió para incluir las islas de Barlovento de las Antillas Menores desde Santa Cruz hasta Dominica." },
   { type:"Cartografía moderna", title:"USGS — Geologic map of St. Thomas, U.S. Virgin Islands", url:"https://pubs.usgs.gov/of/1985/0297/report.pdf", text:"El mapa federal identifica Little St. James entre las islas menores del entorno de St. Thomas; se usa sólo para justificar su pertenencia geográfica al grupo moderno de las Islas Vírgenes." },
-  { type:"Registro judicial moderno", title:"U.S. Department of Justice — Matter of the Estate of Jeffrey E. Epstein", url:"https://www.justice.gov/epstein/doj-disclosures/court-records-matter-estate-jeffrey-e-epstein-deceased-no-st-21-rv-00005-vi-super-ct-2021", text:"El DOJ publica los expedientes del litigio de las Islas Vírgenes que documentan la relación de Epstein con Little St. James. Se usa sólo para explicar el dato moderno, no como evidencia histórica del siglo XVI." }
+  { type:"Registro judicial moderno", title:"U.S. Department of Justice — Matter of the Estate of Jeffrey E. Epstein", url:"https://www.justice.gov/epstein/doj-disclosures/court-records-matter-estate-jeffrey-e-epstein-deceased-no-st-21-rv-00005-vi-super-ct-2021", text:"El DOJ publica los expedientes del litigio de las Islas Vírgenes que documentan la relación de Epstein con Little St. James. Se usa sólo para explicar el dato moderno, no como evidencia histórica del siglo XVI." },
+  { type:"Cartografía vectorial", title:"Click That 'Hood — Caribbean Islands GeoJSON", url:"https://github.com/codeforgermany/click_that_hood/blob/main/public/data/caribbean-islands.geojson", text:"Se usa un subconjunto local del GeoJSON caribeño para dibujar siluetas costeras modernas reconocibles. El paquete upstream se distribuye bajo licencia MIT; no se usa como prueba histórica de jurisdicción." }
 ];
+
+const SITE_BASE = window.__SITE_BASE__ || '/';
+function assetUrl(path){ return SITE_BASE + String(path).replace(/^\/+/, ''); }
+
+const researchDownloads = [
+  { kind:"Documento primario", title:"Real Cédula a Luis Carros sobre las islas a anexar", date:"15 enero 1519", institution:"PARES · Archivo General de Indias", href:"https://pares.mcu.es/ParesBusquedas20/catalogo/description/247774", action:"Abrir digitalización" },
+  { kind:"Libro histórico · PDF", title:"La colonización de Puerto Rico", date:"1907", institution:"Library of Congress", href:"https://tile.loc.gov/storage-services/service/gdc/lhbpr/19425/19425.pdf", action:"Descargar PDF" },
+  { kind:"Geografía del siglo XVI", title:"Geografía y descripción universal de las Indias", date:"1571–1574 · ed. 1894", institution:"Biblioteca Virtual Banco de la República", href:"https://babel.banrepcultural.org/digital/collection/p17054coll10/id/2428/", action:"Abrir edición PDF" },
+  { kind:"Mapa histórico", title:"Map of Lesser Antilles", date:"ca. 1650", institution:"Library of Congress", href:"https://www.loc.gov/item/99443222/", action:"Abrir y descargar" },
+  { kind:"Mapa histórico", title:"Map of the islands of Hispaniola and Puerto Rico", date:"ca. 1639", institution:"Library of Congress", href:"https://www.loc.gov/item/2003623402/", action:"Abrir y descargar" },
+  { kind:"Carta histórica", title:"A chart of the Antilles … with the Virgin Isles", date:"1784", institution:"Library of Congress", href:"https://www.loc.gov/item/74695636/", action:"Abrir y descargar" }
+];
+
+let coastlineData = { type:"FeatureCollection", features:[] };
+async function loadCoastlineData(){
+  try{
+    const r=await fetch(assetUrl('data/caribbean-coastlines.geojson'), {cache:'force-cache'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    coastlineData=await r.json();
+  }catch(err){
+    console.warn('No se pudo cargar la geometría costera; se usarán los centroides.', err);
+  }
+}
 
 const KM2_PER_MI2 = 2.589988110336;
 const explicitArea = islands.reduce((sum, d) => sum + d.area, 0);
@@ -190,6 +214,18 @@ function greatCirclePoints(a,b,n=80){
   return pts;
 }
 
+function ringToPath(ring,W,H){
+  return ring.map(([lon,lat],i)=>{ const [x,y]=project(lat,lon,W,H); return `${i?'L':'M'}${x.toFixed(2)},${y.toFixed(2)}`; }).join(' ') + ' Z';
+}
+function geometryToPath(geometry,W,H){
+  if(!geometry) return '';
+  const polys=geometry.type==='Polygon' ? [geometry.coordinates] : geometry.type==='MultiPolygon' ? geometry.coordinates : [];
+  return polys.map(poly=>poly.map(ring=>ringToPath(ring,W,H)).join(' ')).join(' ');
+}
+function coastlineSvg(W,H){
+  return coastlineData.features.map(f=>`<path class="map-land" data-coast="${esc(f.properties?.name||'')}" d="${geometryToPath(f.geometry,W,H)}"/>`).join('');
+}
+
 function mapSvg({highlight=null, compact=false}={}){
   const W=720,H=500;
   const gridLons=[-68,-67,-66,-65,-64,-63,-62,-61];
@@ -201,21 +237,17 @@ function mapSvg({highlight=null, compact=false}={}){
   const gcp=gc.map(p=>p.join(',')).join(' ');
   const ccp=centerPts.map(p=>p.join(',')).join(' ');
   const labels = compact ? new Set(["Monito","Puerto Rico","Islas Vírgenes","Sombrero","Antigua","Guadalupe","Dominica"]) : new Set(["Monito","Puerto Rico","Islas Vírgenes","Sombrero","Anguilla","Saint Kitts","Antigua","Guadalupe","Dominica"]);
-  const landShapes = [
-    `<path d="M45 172c50-38 122-46 172-19 26 14 28 41-6 54-56 21-126 19-166-6-19-12-18-20 0-29z" fill="#b8c6a5" opacity=".64"/>`,
-    `<path d="M392 82c40-17 76-12 103 4 17 10 16 24-3 31-38 13-76 8-99-4-14-8-14-23-1-31z" fill="#c9d1b2" opacity=".5"/>`,
-    `<path d="M531 262c33-11 68-3 78 14 8 13-4 28-28 30-27 2-61-9-65-23-3-9 3-17 15-21z" fill="#b6c59f" opacity=".54"/>`
-  ].join('');
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mapa esquemático de las islas incluidas entre Monito y Dominica">
-    <rect width="${W}" height="${H}" fill="#e8dfcf"/>
-    ${landShapes}
+  const coast=coastlineSvg(W,H);
+  return `<svg class="map-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Mapa con siluetas costeras modernas de las islas entre Monito y Dominica">
+    <rect class="map-ocean" width="${W}" height="${H}"/>
+    ${coast}
     ${gridLons.map(l=>{const [x]=project(17,l,W,H);return `<line class="map-grid" x1="${x}" y1="32" x2="${x}" y2="468"/><text class="map-axis" x="${x+3}" y="485">${Math.abs(l)}°O</text>`}).join('')}
     ${gridLats.map(l=>{const [,y]=project(l,-64,W,H);return `<line class="map-grid" x1="34" y1="${y}" x2="686" y2="${y}"/><text class="map-axis" x="7" y="${y+3}">${l}°N</text>`}).join('')}
     <polyline class="map-route" points="${poly}"/>
     <polyline class="map-centerline" points="${ccp}"/>
     <polyline class="map-geodesic" points="${gcp}"/>
     ${islands.map((d,i)=>{const [x,y]=routePts[i]; const isH=highlight===d.slug; const isEnd=d.slug==='monito'||d.slug==='dominica'; return `<g><a href="/isla/${d.slug}" data-link aria-label="${esc(d.name)}"><circle class="map-point" cx="${x}" cy="${y}" r="${isH?8:isEnd?5.6:3.4}" fill="${isH?'#c96f49':isEnd?'#c96f49':'#26515c'}" stroke="#f4eee2" stroke-width="${isH?3:1.5}" opacity="${highlight && !isH ? .46 : 1}"/></a>${labels.has(d.name)?`<text class="map-label" x="${x+7}" y="${y-7}">${esc(d.name)}</text>`:''}</g>`}).join('')}
-    <g transform="translate(48 36)"><rect width="252" height="72" rx="14" fill="#f7f2e8" opacity=".94"/><line x1="14" y1="17" x2="52" y2="17" stroke="#c96f49" stroke-width="3" stroke-dasharray="6 7"/><text x="62" y="20" class="map-label">Geodésica Monito–Dominica</text><line x1="14" y1="36" x2="52" y2="36" stroke="#1d6b74" stroke-width="3"/><text x="62" y="39" class="map-label">Eje central · regresión esférica</text><line x1="14" y1="55" x2="52" y2="55" stroke="rgba(38,81,92,.35)"/><text x="62" y="58" class="map-label">Secuencia de unidades</text></g>
+    <g class="map-legend" transform="translate(42 390)"><rect class="map-legend-bg" width="274" height="76" rx="14"/><line class="legend-geodesic" x1="14" y1="18" x2="52" y2="18"/><text x="62" y="21" class="map-label">Geodésica Monito–Dominica</text><line class="legend-centerline" x1="14" y1="38" x2="52" y2="38"/><text x="62" y="41" class="map-label">Eje central · regresión esférica</text><line class="legend-route" x1="14" y1="58" x2="52" y2="58"/><text x="62" y="61" class="map-label">Secuencia de unidades</text></g>
   </svg>`;
 }
 
@@ -232,6 +264,11 @@ function shell(content, current=""){
           <a class="nav-link" href="/islas" data-link ${current==='islands'?'aria-current="page"':''}>Islas</a>
           <a class="nav-link" href="/metodologia" data-link ${current==='method'?'aria-current="page"':''}>Método</a>
         </div>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Cambiar tema" title="Cambiar tema">
+          <span class="theme-icon theme-icon-sun" aria-hidden="true">☀</span>
+          <span class="theme-icon theme-icon-moon" aria-hidden="true">☾</span>
+          <span class="theme-toggle-text">Tema</span>
+        </button>
       </nav>
     </header>
     <main>${content}</main>
@@ -246,7 +283,7 @@ function homePage(){
         <div class="eyebrow">Reconstrucción histórico-geográfica</div>
         <h1>San Juan Bautista <span>del Boriquén</span> en 1570</h1>
         <p class="hero-lede">¿Qué tan extensa era la jurisdicción vinculada a Puerto Rico en el siglo XVI? Esta experiencia traduce la pregunta del video a un modelo cartográfico reproducible: isla por isla, área por área y con una medición geodésica corregida por la curvatura terrestre.</p>
-        <div class="hero-actions"><a class="btn btn-primary" href="#resultados">Ver los resultados</a><a class="btn btn-ghost" href="/islas" data-link>Explorar 22 islas</a></div>
+        <div class="hero-actions"><a class="btn btn-primary" href="#resultados">Ver los resultados</a><a class="btn btn-ghost" href="/islas" data-link>Explorar 22 islas</a><a class="btn btn-ghost" href="${assetUrl('data/islands.csv')}" download>Descargar CSV ↓</a></div>
       </div>
       <div class="map-card">${mapSvg({compact:true})}</div>
     </div></section>
@@ -352,6 +389,19 @@ function methodologyPage(){
       <div class="method-grid"><div class="method-step"><span class="num">01 · VIDEO</span><h3>Preservar el relato</h3><p>El sitio parte del conteo de 22 presentado por el anfitrión y lo usa como estructura principal, sin intentar “corregir” retóricamente el video.</p></div><div class="method-step"><span class="num">02 · HISTORIA</span><h3>Comprobar y matizar</h3><p>La Real Cédula de 1519 y descripciones del siglo XVI sirven para distinguir lo claramente documentado de las normalizaciones modernas de nombres y grupos.</p></div><div class="method-step"><span class="num">03 · CÁLCULO</span><h3>Medir sin fingir precisión histórica</h3><p>Se suman áreas terrestres modernas de 22 unidades normalizadas y se usa WGS-84 para Monito–Dominica. No se añade un “ajuste” arbitrario por cayos menores.</p></div><div class="method-step"><span class="num">04 · EJE CENTRAL</span><h3>Regresión no lineal sobre la esfera</h3><p>Los 22 centroides reciben igual peso. Tras calcular la media esférica, los puntos se proyectan mediante Log al plano tangente, se obtiene el eje principal, se ajusta una cuadrática transversal y se regresa a S² mediante Exp. La longitud se integra sobre pequeños tramos WGS-84.</p></div></div>
     </section>
     <section class="section section-tight"><div class="two-col"><div class="panel"><h3>Área total explícita</h3><div class="formula">A = Σᵢ Aᵢ\n  = ${islands.map(d=>d.area.toFixed(3)).slice(0,7).join(' + ')} + …\n  = ${explicitArea.toFixed(3)} mi²</div></div><div class="panel"><h3>Distancia principal</h3><div class="formula">d = Vincenty⁻¹[(18.1589, −67.9478),\n              (15.4347, −61.3502)]\n  = ${directMiles.toFixed(3)} mi\n  = ${directKm.toFixed(3)} km</div></div></div></section>
+    <section class="section">
+      <div class="section-kicker">Datos y research</div>
+      <h2 class="section-title">Descargar datos y documentación histórica</h2>
+      <p class="section-intro">Los datos analíticos se ofrecen en formatos abiertos. Los documentos históricos permanecen en sus repositorios custodios para conservar procedencia, metadatos y condiciones de uso.</p>
+      <div class="download-grid">
+        <a class="download-card download-card-primary" href="${assetUrl('data/islands.csv')}" download><span class="download-type">DATOS · CSV</span><h3>22 unidades insulares y atributos</h3><p>Coordenadas, áreas, agrupación, estatus histórico, confianza y notas.</p><strong>Descargar islands.csv ↓</strong></a>
+        <a class="download-card" href="${assetUrl('data/caribbean-coastlines.geojson')}" download><span class="download-type">CARTOGRAFÍA · GEOJSON</span><h3>Siluetas costeras usadas por el mapa</h3><p>Geometría vectorial moderna del arco caribeño representado en el sitio.</p><strong>Descargar GeoJSON ↓</strong></a>
+        <a class="download-card" href="${assetUrl('research/sources.csv')}" download><span class="download-type">RESEARCH · CSV</span><h3>Índice de fuentes</h3><p>Fechas, instituciones, enlaces de acceso/descarga, derechos y notas de investigación.</p><strong>Descargar sources.csv ↓</strong></a>
+      </div>
+      <div class="archive-grid">
+        ${researchDownloads.map(d=>`<a class="archive-card" href="${d.href}" target="_blank" rel="noreferrer"><span class="download-type">${esc(d.kind)}</span><h3>${esc(d.title)}</h3><p>${esc(d.date)} · ${esc(d.institution)}</p><strong>${esc(d.action)} ↗</strong></a>`).join('')}
+      </div>
+    </section>
     <section class="section"><div class="section-kicker">Fuentes de trabajo</div><h2 class="section-title">Qué respalda la reconstrucción</h2><p class="section-intro">La documentación primaria confirma la ampliación del obispado y varios de los topónimos usados en el relato. Donde la equivalencia entre un nombre del siglo XVI y una unidad moderna no es exacta, el sitio lo declara de forma explícita.</p><div class="source-list">${sources.map(s=>`<article class="source-item"><div class="source-type">${esc(s.type)}</div><div><h3><a href="${s.url}" target="_blank" rel="noreferrer">${esc(s.title)} ↗</a></h3><p>${esc(s.text)}</p></div></article>`).join('')}</div></section>
     <section class="section section-tight"><div class="callout"><strong>Principio de lectura.</strong> El “22” pertenece al resumen del video; las 5,011.783 mi² son una suma moderna reproducible de las unidades físicas normalizadas por este sitio. Son dos capas distintas: una histórica-narrativa y otra geográfico-numérica.</div></section>
   `,"method");
@@ -385,11 +435,18 @@ function navigate(href){
   history.pushState({},'',href); render();
 }
 function wire(){
-  document.querySelectorAll('[data-link]').forEach(a=>a.addEventListener('click',e=>{ if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey) return; e.preventDefault(); navigate(a.getAttribute('href')); }));
+  document.querySelectorAll('[data-link]').forEach(a=>a.onclick=e=>{ if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey) return; e.preventDefault(); navigate(a.getAttribute('href')); });
+  const themeToggle=document.querySelector('#theme-toggle');
+  if(themeToggle){
+    const sync=()=>{ const dark=document.documentElement.dataset.theme==='dark'; themeToggle.setAttribute('aria-pressed',String(dark)); themeToggle.title=dark?'Cambiar a tema claro':'Cambiar a tema oscuro'; };
+    sync();
+    themeToggle.onclick=()=>{ const next=document.documentElement.dataset.theme==='dark'?'light':'dark'; document.documentElement.dataset.theme=next; try{localStorage.setItem('sjb-theme',next);}catch(_){} sync(); };
+  }
   const input=document.querySelector('#island-search');
-  if(input){ input.addEventListener('input',()=>{ const q=input.value.trim().toLowerCase(); const rows=islands.filter(d=>`${d.name} ${d.alt||''} ${d.group}`.toLowerCase().includes(q)); const grid=document.querySelector('#island-grid'); if(grid) grid.innerHTML=islandCards(rows)||'<p>No se encontraron islas.</p>'; const table=document.querySelector('#table-wrap'); if(table) table.innerHTML=islandTable(rows); wire(); }); }
+  if(input){ input.oninput=()=>{ const q=input.value.trim().toLowerCase(); const rows=islands.filter(d=>`${d.name} ${d.alt||''} ${d.group}`.toLowerCase().includes(q)); const grid=document.querySelector('#island-grid'); if(grid) grid.innerHTML=islandCards(rows)||'<p>No se encontraron islas.</p>'; const table=document.querySelector('#table-wrap'); if(table) table.innerHTML=islandTable(rows); wire(); }; }
 }
 
 window.addEventListener('popstate',render);
 window.addEventListener('hashchange',render);
-render();
+async function boot(){ await loadCoastlineData(); render(); }
+boot();
