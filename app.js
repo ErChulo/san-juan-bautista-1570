@@ -37,6 +37,7 @@ const sources = [
 ];
 
 const SITE_BASE = window.__SITE_BASE__ || '/';
+const PROVINCIAL_COAT_URL = "https://commons.wikimedia.org/wiki/Special:Redirect/file/Escudo_de_Puerto_Rico_(Provincial)_1873-1898.png?width=600";
 function assetUrl(path){ return SITE_BASE + String(path).replace(/^\/+/, ''); }
 
 const researchDownloads = [
@@ -372,14 +373,19 @@ function shell(content, current=""){
 
 function homePage(){
   return shell(`
-    <section class="hero"><div class="hero-inner">
-      <div>
+    <section class="hero"><div class="hero-inner hero-inner-heraldic">
+      <div class="hero-copy">
         <div class="eyebrow">Reconstrucción histórico-geográfica</div>
         <h1>San Juan Bautista <span>del Boriquén</span> en 1570</h1>
         <p class="hero-lede">¿Qué tan extensa era la jurisdicción vinculada a Puerto Rico en el siglo XVI? Esta experiencia traduce la pregunta del video a un modelo cartográfico reproducible: isla por isla, área por área y con una medición geodésica corregida por la curvatura terrestre.</p>
         <div class="hero-actions"><a class="btn btn-primary" href="#resultados">Ver los resultados</a><a class="btn btn-ghost" href="/islas" data-link>Explorar 22 islas</a><a class="btn btn-ghost" href="${assetUrl('data/islands.csv')}" download>Descargar CSV ↓</a></div>
       </div>
-      <div class="map-card">${mapSvg({compact:true})}</div>
+      <figure class="hero-emblem">
+        <div class="hero-emblem-halo" aria-hidden="true"></div>
+        <img src="${PROVINCIAL_COAT_URL}" alt="Escudo provincial histórico de Puerto Rico, 1873–1898" width="300" height="500" loading="eager" decoding="async" fetchpriority="high">
+        <figcaption><strong>Escudo provincial de Puerto Rico</strong><span>1873–1898 · referencia heráldica del diseño</span><a href="https://commons.wikimedia.org/wiki/File:Escudo_de_Puerto_Rico_(Provincial)_1873-1898.png" target="_blank" rel="noreferrer">Fuente de la imagen ↗</a></figcaption>
+      </figure>
+      <div class="map-card hero-map">${mapSvg({compact:true})}</div>
     </div></section>
 
     <section class="section" id="resultados">

@@ -28,3 +28,11 @@ Producción en Vercel: https://san-juan-bautista-1570.vercel.app/
 Además de la geodésica directa, el sitio ajusta una curva central a los 22 centroides con igual peso por unidad. El procedimiento usa media esférica, mapa Log al plano tangente, eje principal, regresión cuadrática transversal y mapa Exp de regreso a la esfera; la longitud se integra con tramos geodésicos WGS-84.
 
 La ficha de **Islas Vírgenes** incluye también una nota moderna sobre Little Saint James. La nota distingue explícitamente entre su pertenencia geográfica al grupo de las Islas Vírgenes y el hecho de que la Real Cédula de 1519 no la enumera por nombre.
+
+
+## Identidad visual
+
+El landing page incorpora el **Escudo provincial de Puerto Rico (1873–1898)** como referencia heráldica prominente. La interfaz toma de la imagen una paleta armonizada —verde profundo, marfil, dorado y rojo sobrio— sin reproducir literalmente todos sus colores.
+
+La imagen se sirve desde Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:Escudo_de_Puerto_Rico_(Provincial)_1873-1898.png
