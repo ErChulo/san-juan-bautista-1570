@@ -16,7 +16,15 @@ Sitio divulgativo que resume y complementa el video de El Boricuazo sobre la ext
 - Superficie moderna normalizada: **5,011.783 mi²**
 - Monito → Dominica: **475.405 mi**
 - Monito → Dominica: **765.090 km**
+- Eje central por regresión cuadrática sobre la esfera: **514.708 mi / 828.343 km**
 
 ## Sitio
 
 Producción en Vercel: https://san-juan-bautista-1570.vercel.app/
+
+
+## Eje central esférico
+
+Además de la geodésica directa, el sitio ajusta una curva central a los 22 centroides con igual peso por unidad. El procedimiento usa media esférica, mapa Log al plano tangente, eje principal, regresión cuadrática transversal y mapa Exp de regreso a la esfera; la longitud se integra con tramos geodésicos WGS-84.
+
+La ficha de **Islas Vírgenes** incluye también una nota moderna sobre Little Saint James. La nota distingue explícitamente entre su pertenencia geográfica al grupo de las Islas Vírgenes y el hecho de que la Real Cédula de 1519 no la enumera por nombre.
