@@ -46,6 +46,50 @@ const researchDownloads = [
   { kind:"Carta histórica", title:"A chart of the Antilles … with the Virgin Isles", date:"1784", institution:"Library of Congress", href:"https://www.loc.gov/item/74695636/", action:"Abrir y descargar" }
 ];
 
+const rescueStories = {
+  "vieques": {
+    "label": "Rescates y desalojos desde Puerto Rico",
+    "date": "1647 · 1718",
+    "title": "Vieques fue atendida militarmente desde Puerto Rico",
+    "text": "En 1647 una expedición salida de Puerto Rico actuó contra el establecimiento inglés asociado a John Pinard; otras fuentes registran también la expulsión de franceses. En 1718 una nueva expedición de tropas, milicias y corsarios procedentes de Puerto Rico volvió a desalojar un asentamiento inglés. Es uno de los casos mejor documentados del patrón que el video resume como «rescates».",
+    "sourceTitle": "Historia geográfica, civil y natural de Puerto Rico · Library of Congress",
+    "sourceUrl": "https://tile.loc.gov/storage-services/service/gdc/lhbpr/06061/06061.pdf"
+  },
+  "santa-cruz": {
+    "label": "Expedición desde Puerto Rico",
+    "date": "1647",
+    "title": "Santa Cruz aparece en las operaciones de 1647",
+    "text": "Una expedición desde Puerto Rico desalojó un establecimiento extranjero en Santa Cruz en 1647. La documentación no es perfectamente uniforme sobre la nacionalidad del grupo expulsado: la ficha archivística del mapa de 1647 habla de ingleses, mientras síntesis puertorriqueñas posteriores lo describen como francés. El sitio conserva el hecho de la expedición y señala la discrepancia.",
+    "sourceTitle": "Mapa de la Isla de Santa Cruz · registro archivístico de 1647",
+    "sourceUrl": "https://greatercaribbeanmaps.org/maps/mapa-de-la-isla-de-santa-cruz-islas-virgenes-de-los-estados-unidos-de-america-2/"
+  },
+  "islas-virgenes": {
+    "label": "Rescate de Tórtola",
+    "date": "1646",
+    "title": "Tórtola fue atacada desde Puerto Rico",
+    "text": "Fuentes puertorriqueñas registran que en 1646 una expedición procedente de Puerto Rico expulsó a los holandeses de Tórtola. Como Tórtola está comprendida aquí dentro de la unidad narrativa «Islas Vírgenes», el episodio se presenta en esta ficha sin convertir Tórtola en una unidad adicional del conteo de 22.",
+    "sourceTitle": "Boletín de la Academia Puertorriqueña de la Historia · 1976",
+    "sourceUrl": "https://academiaprhistoria.org/wp-content/uploads/2019/11/1976-01-01.pdf"
+  },
+  "saint-martin-sint-maarten": {
+    "label": "Defensa atendida desde Puerto Rico",
+    "date": "1644–1648",
+    "title": "San Martín dependía materialmente de San Juan para su defensa",
+    "text": "Durante el ataque holandés de 1644 llegaron refuerzos desde Puerto Rico a la guarnición española de San Martín. En 1648 la guarnición fue evacuada a Puerto Rico cuando España abandonó la isla; las fuentes puertorriqueñas describen además el costo que suponía sostener y defender San Martín desde San Juan.",
+    "sourceTitle": "Salvador Brau · síntesis histórica sobre San Martín y Tórtola",
+    "sourceUrl": "https://www.larramendi.es/es/catalogo_imagenes/grupo.do?path=1031922"
+  },
+  "saint-kitts": {
+    "label": "Operaciones punitivas del siglo XVII",
+    "date": "Siglo XVII",
+    "title": "San Cristóbal figura entre las islas atendidas desde Puerto Rico",
+    "text": "Una síntesis del Instituto de Cultura Puertorriqueña describe a Puerto Rico como base de operaciones punitivas contra piratas y corsarios en las islas de Barlovento y enumera a San Cristóbal entre los lugares de los que fueron desalojados repetidamente. No asignamos aquí una fecha concreta a una expedición puertorriqueña específica porque la fuente resumida no la fija.",
+    "sourceTitle": "Prontuario histórico de Puerto Rico · Instituto de Cultura Puertorriqueña",
+    "sourceUrl": "https://www.larramendi.es/es/catalogo_imagenes/grupo.do?path=1031923"
+  }
+};
+
+
 let coastlineData = { type:"FeatureCollection", features:[] };
 async function loadCoastlineData(){
   try{
@@ -214,16 +258,16 @@ function greatCirclePoints(a,b,n=80){
   return pts;
 }
 
-function ringToPath(ring,W,H){
-  return ring.map(([lon,lat],i)=>{ const [x,y]=project(lat,lon,W,H); return `${i?'L':'M'}${x.toFixed(2)},${y.toFixed(2)}`; }).join(' ') + ' Z';
+function ringToPath(ring,W,H,proj=project){
+  return ring.map(([lon,lat],i)=>{ const [x,y]=proj(lat,lon,W,H); return `${i?'L':'M'}${x.toFixed(2)},${y.toFixed(2)}`; }).join(' ') + ' Z';
 }
-function geometryToPath(geometry,W,H){
+function geometryToPath(geometry,W,H,proj=project){
   if(!geometry) return '';
   const polys=geometry.type==='Polygon' ? [geometry.coordinates] : geometry.type==='MultiPolygon' ? geometry.coordinates : [];
-  return polys.map(poly=>poly.map(ring=>ringToPath(ring,W,H)).join(' ')).join(' ');
+  return polys.map(poly=>poly.map(ring=>ringToPath(ring,W,H,proj)).join(' ')).join(' ');
 }
-function coastlineSvg(W,H){
-  return coastlineData.features.map(f=>`<path class="map-land" data-coast="${esc(f.properties?.name||'')}" d="${geometryToPath(f.geometry,W,H)}"/>`).join('');
+function coastlineSvg(W,H,proj=project){
+  return coastlineData.features.map(f=>`<path class="map-land" data-coast="${esc(f.properties?.name||'')}" d="${geometryToPath(f.geometry,W,H,proj)}"/>`).join('');
 }
 
 function mapSvg({highlight=null, compact=false}={}){
